@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF--8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Alex | إسكندريتي</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <style>
+      /* --- Base Animations --- */
+      @keyframes slide-in-bottom {
+          0% { transform: translateY(20px); opacity: 0; }
+          100% { transform: translateY(0); opacity: 1; }
+      }
+      .animate-slide-in-bottom {
+          animation: slide-in-bottom 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+      }
+      @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(1deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+      }
+      .animate-float {
+          animation: float 5s ease-in-out infinite;
+      }
+      @keyframes page-fade-in {
+          from { opacity: 0; transform: scale(0.98); }
+          to { opacity: 1; transform: scale(1); }
+      }
+      .animate-page-fade-in {
+          animation: page-fade-in 0.4s ease-out both;
+      }
+      @keyframes highlight {
+        0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+      }
+      .animate-highlight {
+          animation: highlight 1.2s ease-out;
+      }
+      
+      /* --- NEW: Staggered List Animation --- */
+      @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+      }
+      .animate-fade-in-up {
+          animation: fade-in-up 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+      }
+
+      /* --- NEW: Aurora Background --- */
+      @keyframes aurora-move {
+        0% { transform: translate(var(--start-x), var(--start-y)); }
+        100% { transform: translate(var(--end-x), var(--end-y)); }
+      }
+      .aurora-blob {
+        position: absolute;
+        filter: blur(80px);
+        border-radius: 9999px;
+        animation: aurora-move 25s ease-in-out infinite alternate;
+      }
+
+      /* --- NEW: Enhanced Glassmorphism --- */
+      .glassmorphism-enhanced {
+        position: relative;
+        background-color: rgba(36, 49, 64, 0.7); /* base-dark-200 at 70% */
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .dark .glassmorphism-enhanced {
+        background-color: rgba(36, 49, 64, 0.7);
+      }
+      .glassmorphism-enhanced::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px; /* border thickness */
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+
+      /* --- NEW: 3D Tilt Card Effect --- */
+      .tilt-card {
+        transform-style: preserve-3d;
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      }
+      .tilt-card:hover {
+        transform: rotateX(8deg) rotateY(-8deg) scale(1.05);
+      }
+
+      /* --- NEW: Ripple Click Effect --- */
+      .ripple-container {
+        position: relative;
+        overflow: hidden;
+      }
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+      @keyframes ripple-animation {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+
+      /* --- NEW: Animated Weather Icons --- */
+      @keyframes sun-rays {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(45deg); }
+      }
+      .sun-rays { animation: sun-rays 10s linear infinite; }
+
+      @keyframes cloud-drift {
+        from { transform: translateX(-10px); }
+        to { transform: translateX(10px); }
+      }
+      .cloud-drift { animation: cloud-drift 8s ease-in-out infinite alternate; }
+
+      @keyframes rain-drop {
+        from { transform: translateY(-20px); opacity: 1; }
+        to { transform: translateY(20px); opacity: 0; }
+      }
+      .rain-drop { animation: rain-drop 1.2s linear infinite; }
+
+      /* --- NEW: History Card Image Slider --- */
+      .history-slider-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+      }
+      .history-slider-image-top {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          pointer-events: none;
+      }
+      .history-slider-track {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background-color: rgba(255, 255, 255, 0.7);
+          cursor: row-resize;
+          pointer-events: none;
+          z-index: 10;
+      }
+      .history-slider-handle {
+          position: absolute;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 40px;
+          height: 40px;
+          background-color: rgba(255, 255, 255, 0.9);
+          border-radius: 9999px;
+          cursor: row-resize;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+          z-index: 10;
+      }
+      .history-slider-handle::before, .history-slider-handle::after {
+          content: '';
+          position: absolute;
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-color: transparent;
+          border-width: 6px;
+      }
+      .history-slider-handle::before {
+          top: 6px;
+          border-top-color: #1A222B;
+      }
+      .history-slider-handle::after {
+          bottom: 6px;
+          border-bottom-color: #1A222B;
+      }
+      
+      /* --- Base Backgrounds --- */
+      .bg-parchment {
+          background-color: #F9F5F0;
+          background-image:
+              linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+          background-size: 20px 20px;
+      }
+      .dark .bg-parchment {
+          background-color: #1A222B;
+          background-image:
+              linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+          background-size: 20px 20px;
+      }
+      .bg-room-sidi-gaber {
+        background-color: #3a3a3a;
+        background-image: repeating-linear-gradient(
+            45deg,
+            #4f4f4f 0,
+            #4f4f4f 2px,
+            transparent 2px,
+            transparent 15px
+        );
+      }
+      .bg-room-miami {
+        background: linear-gradient(to bottom, #2A5B87, #6DD5FA, #FFFFFF);
+      }
+      .bg-room-ramleh {
+        background-color: #e6d8b3;
+        background-image: radial-gradient(circle, #d4af37 1px, rgba(0, 0, 0, 0) 1px);
+        background-size: 15px 15px;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#2A5B87', // Mediterranean Blue
+              secondary: '#D4AF37', // Pharos Gold
+              accent: '#FF6B35', // Corniche Orange
+              success: '#4CAF50', // Oasis Green
+              warning: '#E53935', // Sunset Red
+              // Light Theme
+              'base-100': '#F9F5F0', // Papyrus Cream (Main BG)
+              'base-200': '#FFFFFF', // White (Card BG)
+              'base-300': '#EAE5E0', // Lighter Papyrus (Borders, subtle elements)
+              'base-content': '#2C3E50', // Nile Indigo (Text)
+              // Dark Theme - Softer, richer contrast
+              'base-dark-100': '#1A222B', // Deep Ocean Blue (Main BG)
+              'base-dark-200': '#243140', // Midnight Blue (Card BG)
+              'base-dark-300': '#3A4A5B', // Faded Navy (Borders, dividers)
+              'base-content-dark': '#E1E9F4', // Soft Cloud (Text)
+            },
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+    "@google-ai/generativelanguage": "https://aistudiocdn.com/@google-ai/generativelanguage@^3.5.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-base-100 dark:bg-base-dark-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
