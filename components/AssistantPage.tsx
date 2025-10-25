@@ -37,7 +37,7 @@ const AssistantPage: React.FC<AssistantPageProps> = ({
     }, [conversation]);
 
     return (
-        <div className="relative h-full w-full flex flex-col bg-gradient-to-b from-primary via-[#1e4265] to-base-dark-100 text-base-content-dark overflow-hidden">
+        <div className="relative h-full w-full flex flex-col bg-gradient-to-b from-primary to-base-dark-100 text-base-content-dark overflow-hidden">
             <StatusBar />
             <main className="flex-1 flex flex-col pt-10 pb-40 overflow-hidden">
                 <div className="flex-1 overflow-y-auto px-4 space-y-4">

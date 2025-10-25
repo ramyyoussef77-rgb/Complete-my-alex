@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { LocalEvent } from '../types';
@@ -76,11 +75,11 @@ const EventsPage: React.FC<EventsPageProps> = ({ openNav }) => {
       if (!process.env.API_KEY) throw new Error("API key is not configured.");
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
-        Find a diverse list of 15 upcoming local events in Alexandria, Egypt.
+        Find a diverse list of 15 upcoming local events in Alexandria, Egypt. Prioritize official events from http://www.alexandria.gov.eg/events.
         Respond ONLY with a valid JSON array of objects.
         Each object must have: "name"(string), "date"(human-readable string), "location"(string), "description"(string), "url"(string), "category"(one of 'Music', 'Art', 'Food', 'Sports', 'Community', 'Other'), "coordinates"({"lat": number, "lng": number}), "startDate"(ISO 8601 string), "endDate"(ISO 8601 string), "imagePrompt"(string for an image model).`;
       
-      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { tools: [{ googleSearch: {} }] } });
+      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { tools: [{ googleSearch: {} }, { googleMaps: {} }] } });
       const sanitizedText = response.text.trim().replace(/^```json\s*|```$/g, '');
       const parsedEvents = JSON.parse(sanitizedText);
       
@@ -126,7 +125,7 @@ const EventsPage: React.FC<EventsPageProps> = ({ openNav }) => {
         endOfSelected.setDate(endOfSelected.getDate() + 1);
         return eventDate >= startOfSelected && eventDate < endOfSelected;
       }
-
+      
       switch (filters.date) {
         case 'today':
           const endOfToday = new Date(startOfToday);
@@ -135,13 +134,15 @@ const EventsPage: React.FC<EventsPageProps> = ({ openNav }) => {
         case 'weekend':
           const dayOfWeek = now.getDay();
           const startOfWeekend = new Date(startOfToday);
-          startOfWeekend.setDate(startOfWeekend.getDate() - dayOfWeek + 5); // Assuming Fri is start
+          startOfWeekend.setDate(startOfWeekend.getDate() + (5 - dayOfWeek)); // Assuming Friday is start of weekend
           const endOfWeekend = new Date(startOfWeekend);
           endOfWeekend.setDate(endOfWeekend.getDate() + 2);
           return eventDate >= startOfWeekend && eventDate < endOfWeekend;
         case 'month':
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
           const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-          return eventDate >= startOfToday && eventDate <= endOfMonth;
+          return eventDate >= startOfMonth && eventDate <= endOfMonth;
+        case 'all':
         default:
           return true;
       }
@@ -149,107 +150,19 @@ const EventsPage: React.FC<EventsPageProps> = ({ openNav }) => {
   }, [translatedEvents, filters, selectedCalendarDate]);
 
   const handleAddToCalendar = (event: LocalEvent) => {
-    const formatICSDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, "");
-    const startDate = event.startDate ? new Date(event.startDate) : new Date();
-    const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 60 * 60 * 1000);
-
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-UID:${Date.now()}@myalexapp.com
-SUMMARY:${event.name}
-DESCRIPTION:${event.description}\\nURL: ${event.url}
-LOCATION:${event.location}
-DTSTART:${formatICSDate(startDate)}
-DTEND:${formatICSDate(endDate)}
-END:VEVENT
-END:VCALENDAR`;
-
-    const blob = new Blob([icsContent], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${event.name}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  
-  const handleDateFilterChange = (filter: DateFilter) => {
-    setSelectedCalendarDate(null);
-    setFilters(f => ({...f, date: filter }));
-  }
-
-  const handleCalendarDateSelect = (date: Date | null) => {
-    setFilters(f => ({ ...f, date: 'all' }));
-    setSelectedCalendarDate(date);
-    setViewMode('list');
+    const title = encodeURIComponent(event.name);
+    const details = encodeURIComponent(event.description);
+    const location = encodeURIComponent(event.location);
+    const startDate = new Date(event.startDate!).toISOString().replace(/-|:|\.\d\d\d/g,"");
+    const endDate = new Date(event.endDate!).toISOString().replace(/-|:|\.\d\d\d/g,"");
+    
+    const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
+    window.open(googleCalendarUrl, '_blank');
   };
 
-  const CATEGORIES = ['Music', 'Art', 'Food', 'Sports', 'Community', 'Other'];
-  const DATE_FILTERS: {key: DateFilter, label: string}[] = [{key: 'all', label: t.date_all}, {key: 'today', label: t.date_today}, {key: 'weekend', label: t.date_weekend}, {key: 'month', label: t.date_month}];
-
-  const renderContent = () => {
-    if (isInitialLoading) {
-      return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"><{[...Array(8)].map((_, i) => <SkeletonImageCard key={i} />)}</div>;
-    }
-    if (error) {
-      return <div className="flex justify-center items-center h-full"><p className="text-center text-accent">{error}</p></div>;
-    }
-
-    if (viewMode === 'list') {
-      if (filteredEvents.length === 0) return <div className="flex justify-center items-center h-full"><p>{t.no_events_found}</p></div>
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredEvents.map((event, index) => (
-            <div key={`${event.name}-${index}`} className="animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
-              <EventCard event={event} onAddToCalendar={() => handleAddToCalendar(event)} onAnalyze={() => setEventToAnalyze(event)} />
-            </div>
-          ))}
-        </div>
-      );
-    }
-    if (viewMode === 'calendar') {
-      return <CalendarView events={translatedEvents || []} onDateSelect={handleCalendarDateSelect} />;
-    }
-    if (viewMode === 'map') {
-        const eventsWithCoords = (translatedEvents || []).filter(e => e.coordinates);
-        return <div className="h-[calc(100vh-20rem)]"><InteractiveMapView services={eventsWithCoords.map(e => ({...e, id: e.name})) as any} selectedServiceId={selectedEventId} onSelectService={setSelectedEventId} /></div>
-    }
-  };
+  const isLoading = isInitialLoading || (isRevalidating && !events);
 
   return (
     <>
       <EventAnalysisModal event={eventToAnalyze} onClose={() => setEventToAnalyze(null)} />
-      <div className="relative flex-1 w-full bg-base-dark-100 text-base-content-dark p-4 pt-20 flex flex-col">
-        <Header openNav={openNav} />
-        
-        <div className="space-y-3 mb-4">
-          <input type="text" placeholder={t.search_events_placeholder} value={filters.search} onChange={e => setFilters(f => ({ ...f, search: e.target.value }))} className="w-full px-4 py-2 border border-base-dark-300 rounded-full bg-base-dark-200 focus:ring-2 focus:ring-secondary"/>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                <button onClick={() => setFilters(f => ({ ...f, category: 'all' }))} className={`px-3 py-1 rounded-full font-semibold whitespace-nowrap ${filters.category === 'all' ? 'bg-secondary text-base-dark-100' : 'bg-base-dark-200'}`}>{t.all_categories}</button>
-                {CATEGORIES.map(c => <button key={c} onClick={() => setFilters(f => ({ ...f, category: c }))} className={`px-3 py-1 rounded-full font-semibold whitespace-nowrap ${filters.category === c ? 'bg-secondary text-base-dark-100' : 'bg-base-dark-200'}`}>{
-                  // FIX: Safely construct translation key to avoid implicit conversion errors at runtime.
-                  t[`cat_${c.toLowerCase()}` as keyof typeof t] || c
-                }</button>)}
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-                {DATE_FILTERS.map(d => <button key={d.key} onClick={() => handleDateFilterChange(d.key)} className={`px-3 py-1 rounded-full font-semibold whitespace-nowrap ${filters.date === d.key && !selectedCalendarDate ? 'bg-secondary text-base-dark-100' : 'bg-base-dark-200'}`}>{d.label}</button>)}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center mb-4 bg-base-dark-200 p-1 rounded-full w-min mx-auto">
-            {(['list', 'calendar', 'map'] as ViewMode[]).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)} className={`px-3 py-1 text-sm font-semibold rounded-full capitalize ${viewMode === mode ? 'bg-secondary text-base-dark-100' : ''}`}>{t[`view_${mode}`]}</button>
-            ))}
-        </div>
-        
-        <main className="flex-1 overflow-y-auto pr-2">{renderContent()}</main>
-      </div>
-    </>
-  );
-};
-
-export default EventsPage;
+      <div className="relative flex-1 w-full bg-base-

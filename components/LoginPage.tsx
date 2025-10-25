@@ -28,6 +28,34 @@ async function generateImage(prompt: string): Promise<string | null> {
   }
 }
 
+const LighthouseLoginIcon: React.FC = () => (
+    <div className="w-48 h-48 group tilt-card mb-8" style={{ perspective: '500px' }}>
+        <svg viewBox="0 0 64 64" className="w-full h-full animate-float">
+          <defs>
+            <linearGradient id="fab-grad-icon-login" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#F8F8F8" />
+                <stop offset="100%" stopColor="#E0E0E0" />
+            </linearGradient>
+          </defs>
+          {/* Back Layer */}
+          <g style={{ transform: 'translateZ(-2px)' }} opacity="0.6">
+            <path fill="#252A4A" d="M22 24 L20 62 L44 62 L42 24 Z" />
+          </g>
+          {/* Main Structure */}
+          <g style={{ transform: 'translateZ(0px)' }}>
+            <path fill="url(#fab-grad-icon-login)" d="M24 24 L22 62 L42 62 L40 24 Z" />
+            <path fill="url(#fab-grad-icon-login)" d="M20 20 H 44 L 42 24 H 22 Z" />
+            <path fill="#1B1F3B" d="M28 2 H 36 L 40 20 H 24 Z" />
+            <rect x="26" y="4" width="12" height="14" fill="url(#fab-grad-icon-login)" opacity="0.8"/>
+          </g>
+          {/* Light Beam */}
+          <g style={{ transform: 'translateZ(2px)', transformOrigin: '32px 2px' }} className="group-hover:[animation:sweep-light_3s_ease-in-out_infinite]">
+            <path fill="currentColor" className="text-accent" d="M32 2 L 28 8 H 36 Z" />
+          </g>
+        </svg>
+    </div>
+);
+
 const LoginPage: React.FC = () => {
   const { login } = useApp();
   const t = useTranslations();
@@ -64,10 +92,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-primary to-base-dark-100 text-base-content-dark">
+      <LighthouseLoginIcon />
       <div className="text-center">
-        <h1 className="text-5xl font-semibold tracking-wider text-white">{t.home_title_en}</h1>
-        <h2 className="text-4xl font-light text-secondary">{t.home_title_ar}</h2>
-        <p className="mt-4 text-lg font-extralight text-base-content-dark/80 max-w-md mx-auto">
+        <h1 className="text-display tracking-wider text-white">{t.home_title_en}</h1>
+        <h2 className="text-h1 font-light text-secondary">{t.home_title_ar}</h2>
+        <p className="mt-4 text-body-lg font-light text-base-content-dark/80 max-w-md mx-auto">
             {t.slogan_1} <br/> {t.slogan_2}
         </p>
       </div>
@@ -77,7 +106,7 @@ const LoginPage: React.FC = () => {
           disabled={isLoggingIn}
           className="ripple-container w-full flex items-center justify-center py-3 px-4 mb-3 bg-base-100 text-base-content font-semibold rounded-lg shadow-md hover:bg-gray-200 transition-colors disabled:opacity-50"
         >
-          {isLoggingIn ? <div className="w-5 h-5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div> : <><GoogleIcon /> {t.signInGoogle}</>}
+          {isLoggingIn ? <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div> : <><GoogleIcon /> {t.signInGoogle}</>}
         </button>
         <button
           onClick={(e) => handleLogin(e, 'Alex User', 'alex.user@example.com')}

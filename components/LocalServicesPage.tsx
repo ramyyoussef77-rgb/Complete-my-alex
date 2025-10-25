@@ -149,7 +149,7 @@ const LocalServicesPage: React.FC<LocalServicesPageProps> = ({ openNav, location
             </div>
           </div>
 
-          <main className="flex-1 flex flex-col md:flex-row gap-4 pt-4 overflow-hidden">
+          <main className="flex-1 flex flex-col md:flex-row gap-4 pt-4">
             <div className="md:w-1/3 h-64 md:h-auto flex-shrink-0">
                 <InteractiveMapView services={services || []} selectedServiceId={selectedServiceId} onSelectService={handleSelectService} />
             </div>

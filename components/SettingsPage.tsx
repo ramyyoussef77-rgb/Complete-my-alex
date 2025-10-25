@@ -76,15 +76,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ openNav }) => {
                         <div className="flex items-center justify-between">
                             <label htmlFor="theme" className="font-semibold">{t.theme}</label>
                             <div className="flex items-center bg-base-300 dark:bg-base-dark-300 p-1 rounded-full">
-                                <button onClick={() => setTempTheme('light')} className={`px-3 py-1 text-sm rounded-full ${tempTheme === 'light' ? 'bg-gradient-to-r from-primary to-secondary text-white' : ''}`}>{t.light}</button>
-                                <button onClick={() => setTempTheme('dark')} className={`px-3 py-1 text-sm rounded-full ${tempTheme === 'dark' ? 'bg-gradient-to-r from-primary to-secondary text-white' : ''}`}>{t.dark}</button>
+                                <button onClick={() => setTempTheme('light')} className={`px-3 py-1 text-sm rounded-full ${tempTheme === 'light' ? 'bg-primary text-base-content-dark' : ''}`}>{t.light}</button>
+                                <button onClick={() => setTempTheme('dark')} className={`px-3 py-1 text-sm rounded-full ${tempTheme === 'dark' ? 'bg-primary text-base-content-dark' : ''}`}>{t.dark}</button>
                             </div>
                         </div>
                         <div className="flex items-center justify-between">
                             <label htmlFor="language" className="font-semibold">{t.language}</label>
                              <div className="flex items-center bg-base-300 dark:bg-base-dark-300 p-1 rounded-full">
-                                <button onClick={() => setTempLanguage('en')} className={`px-3 py-1 text-sm rounded-full ${tempLanguage === 'en' ? 'bg-gradient-to-r from-primary to-secondary text-white' : ''}`}>English</button>
-                                <button onClick={() => setTempLanguage('ar')} className={`px-3 py-1 text-sm rounded-full ${tempLanguage === 'ar' ? 'bg-gradient-to-r from-primary to-secondary text-white' : ''}`}>العربية</button>
+                                <button onClick={() => setTempLanguage('en')} className={`px-3 py-1 text-sm rounded-full ${tempLanguage === 'en' ? 'bg-primary text-base-content-dark' : ''}`}>English</button>
+                                <button onClick={() => setTempLanguage('ar')} className={`px-3 py-1 text-sm rounded-full ${tempLanguage === 'ar' ? 'bg-primary text-base-content-dark' : ''}`}>العربية</button>
                             </div>
                         </div>
                     </div>
@@ -105,11 +105,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ openNav }) => {
 
                 {/* Save and Logout Section */}
                 <section className="space-y-4">
-                     <button onClick={handleSave} className="ripple-container w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover:opacity-90 transition-opacity active:scale-95">
+                     <button onClick={handleSave} className="ripple-container w-full py-3 bg-secondary text-base-dark-100 font-bold rounded-lg hover:opacity-90 transition-opacity active:scale-95">
                         {t.save_options}
                     </button>
                     {showSavedMessage && <p className="text-green-400 text-center text-sm animate-pulse">{t.settings_saved}</p>}
-                    <button onClick={handleLogout} className="ripple-container w-full py-3 bg-warning text-white font-bold rounded-lg hover:bg-red-600 transition-colors active:scale-95">
+                    <button onClick={handleLogout} className="ripple-container w-full py-3 bg-accent text-white font-bold rounded-lg hover:bg-red-600 transition-colors active:scale-95">
                         {t.logout}
                     </button>
                 </section>

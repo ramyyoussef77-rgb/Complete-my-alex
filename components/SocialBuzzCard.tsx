@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SocialPost } from '../types';
 
@@ -20,7 +19,7 @@ const SentimentIcon: React.FC<{ sentiment?: 'Positive' | 'Neutral' | 'Negative' 
 
 const SocialBuzzCard: React.FC<{ post: SocialPost, onTagClick: (tag: string) => void }> = ({ post, onTagClick }) => {
     return (
-        <a href={post.url} target="_blank" rel="noopener noreferrer" className="block bg-base-dark-200 rounded-xl shadow-lg overflow-hidden group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+        <a href={post.url} target="_blank" rel="noopener noreferrer" className="glassmorphism-enhanced tilt-card block rounded-xl shadow-lg overflow-hidden group transition-all duration-300">
             {post.imageUrl && (
                 <div className="overflow-hidden h-40">
                     <img src={post.imageUrl} alt="Post image" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -29,11 +28,11 @@ const SocialBuzzCard: React.FC<{ post: SocialPost, onTagClick: (tag: string) => 
             <div className="p-4 flex flex-col">
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center flex-1 overflow-hidden">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mr-3 text-white font-bold shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mr-3 text-base-content font-bold shrink-0">
                             {post.author ? post.author.replace(/[^a-zA-Z0-9]/g, '').charAt(0).toUpperCase() : 'A'}
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            <p className="font-semibold text-base-content-dark truncate">{post.author}</p>
+                            <p className="text-subtitle text-base-content-dark truncate">{post.author}</p>
                             <div className="flex items-center text-base-content-dark/70 text-xs">
                                 <PlatformIcon platform={post.platform} />
                                 <span className="ml-1.5">{post.platform}</span>
@@ -42,14 +41,14 @@ const SocialBuzzCard: React.FC<{ post: SocialPost, onTagClick: (tag: string) => 
                     </div>
                     <SentimentIcon sentiment={post.sentiment} />
                 </div>
-                <p className="text-base-content-dark/90 text-sm line-clamp-4 flex-1 my-2">{post.content}</p>
+                <p className="text-body text-base-content-dark/90 line-clamp-4 flex-1 my-2">{post.content}</p>
                 {post.tags && post.tags.length > 0 && (
-                     <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/10">
+                     <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-base-content-dark/10">
                         {post.tags.map(tag => (
                             <button 
                                 key={tag} 
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTagClick(tag); }}
-                                className="px-2 py-1 bg-primary/20 text-secondary text-xs font-semibold rounded-full hover:bg-primary/40 transition-colors"
+                                className="px-2 py-1 bg-primary/20 text-secondary text-caption font-semibold rounded-full hover:bg-primary/40 transition-colors"
                             >
                                 #{tag}
                             </button>

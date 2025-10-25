@@ -1,5 +1,5 @@
 {
-  "name": "gemini-voice-assistant",
+  "name": "gemini-my-alex-completed",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,10 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@google/genai": "^1.26.0",
-    "@google-ai/generativelanguage": "^3.5.0"
+    "react": "^19.2.0",
+    "@google/genai": "^1.26.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

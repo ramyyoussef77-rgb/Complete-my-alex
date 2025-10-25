@@ -1,4 +1,5 @@
 
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, ConnectRequest, Type, FunctionDeclaration } from "@google/genai";
 import { ConversationTurn, User, Language } from '../types';
@@ -84,13 +85,13 @@ export const useVoiceAssistant = (
         }
     }, [outputSources, user, conversation]);
 
-    const sendTextMessage = useCallback((text: string) => {
+    const sendTextMessage = (text: string) => {
         if (!text.trim() || !sessionPromiseRef.current) return;
         sessionPromiseRef.current.then(session => {
-            session.sendTextInput({ text });
+            session.sendRealtimeInput({ text });
             setConversation(prev => [...prev.map(t => ({...t, isPartial: false})), { type: 'user', text }]);
         });
-    }, []);
+    };
 
     const startSession = useCallback(async () => {
         if (connectionStateRef.current.isConnected || connectionStateRef.current.isConnecting || !user) return;
@@ -114,16 +115,7 @@ export const useVoiceAssistant = (
             currentOutputTranscription.current = '';
             nextStartTime.current = 0;
             
-            const userLanguage = language === 'ar' ? 'Arabic' : 'English';
-            const systemInstruction = `You are Alex, a friendly and helpful AI assistant for the 'My Alex' app. The user's name is ${user.name}. Always greet them by name at the start of a new conversation if the history is empty.
-You can navigate the app for the user using the navigateToPage function. Available pages are: home, socialBuzz, history, marketplace, chatRooms, settings, events, localServices.
-After providing a helpful response, you MUST suggest 2-3 relevant follow-up actions or questions for the user. Format them at the very end of your response like this: [Suggestions: "Suggestion 1", "Suggestion 2"]
-Your main response MUST follow this structure exactly:
-[Clear, concise answer in the user’s language (${userLanguage})]
-
-🔹 **Confidence**: [Your confidence level: High, Medium, Low, or None]
-🔹 **Source**: [The primary source of your information, e.g., "Google Maps", "Web search", "Internal knowledge", or "App function"]
-🔹 **Note**: [Optional: Provide brief context, a limitation, or a helpful suggestion. If none, omit this line.]`;
+            const systemInstruction = `You are a helpful and conversational AI assistant for the "My Alex" app. You can answer questions, provide information, and help users navigate the app's features. You have access to Google Search, Google Maps, and Google Places to provide accurate and up-to-date information. Be friendly, clear, and concise in your responses.`;
 
             const getCurrentLocationDeclaration: FunctionDeclaration = { name: 'getCurrentLocation', description: 'Get the user\'s current GPS location.', parameters: { type: Type.OBJECT, properties: {} } };
             const navigateToPageDeclaration: FunctionDeclaration = {
@@ -149,143 +141,164 @@ Your main response MUST follow this structure exactly:
                         setIsConnected(true);
                         setConversation(prev => prev.filter(t => t.type !== 'system'));
                         
-                        const source = inputAudioContextRef.current!.createMediaStreamSource(stream);
-                        scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
-                        scriptProcessorRef.current.onaudioprocess = (event) => {
-                            const inputData = event.inputBuffer.getChannelData(0);
-                            const pcmBlob: Blob = { data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)), mimeType: 'audio/pcm;rate=16000' };
-                            sessionPromiseRef.current?.then(session => session.sendRealtimeInput({ media: pcmBlob })).catch(console.error);
+                        // FIX: Changed inputAudioContext to inputAudioContextRef.current to access the correct AudioContext instance.
+                        const source = inputAudioContextRef.current!.createMediaStreamSource(mediaStreamRef.current!);
+                        const scriptProcessor = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
+                        scriptProcessorRef.current = scriptProcessor;
+
+                        scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+                            const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
+                            const pcmBlob: Blob = {
+                                data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
+                                mimeType: 'audio/pcm;rate=16000',
+                            };
+                            sessionPromiseRef.current?.then(session => {
+                                session.sendRealtimeInput({ media: pcmBlob });
+                            });
                         };
-                        source.connect(scriptProcessorRef.current);
-                        scriptProcessorRef.current.connect(inputAudioContextRef.current!.destination);
+                        source.connect(scriptProcessor);
+                        scriptProcessor.connect(inputAudioContextRef.current!.destination);
                     },
                     onmessage: async (message: LiveServerMessage) => {
-                       if (message.toolCall?.functionCalls) {
-                           for (const fc of message.toolCall.functionCalls) {
-                               let result = "Function executed.";
-                               if (fc.name === 'getCurrentLocation') {
-                                   result = locationRef.current ? `User's current location is latitude ${locationRef.current.latitude}, longitude ${locationRef.current.longitude}` : "Location not available.";
-                                   setConversation(prev => [...prev, {type: 'tool', text: t.assistant_consulting_maps}]);
-                               }
-                               if (fc.name === 'navigateToPage') {
-                                   const page = fc.args.page as Page;
-                                   onNavigate(page);
-                                   result = `Successfully navigated to ${page}.`;
-                                   setConversation(prev => [...prev, {type: 'tool', text: t.assistant_navigating.replace('{page}', page) }]);
-                               }
-                               sessionPromiseRef.current?.then(session => session.sendToolResponse({
-                                   functionResponses: { id: fc.id, name: fc.name, response: { result } }
-                               }));
-                           }
-                       }
-                       
-                       const grounding = message.serverContent?.modelTurn?.groundingMetadata?.groundingChunks;
-                       if (grounding && grounding.length > 0 && !isReceivingText) {
-                           const sourceText = grounding[0].web ? t.assistant_searching_web : grounding[0].maps ? t.assistant_consulting_maps : t.assistant_thinking;
-                           setConversation(prev => {
-                               const lastTurn = prev[prev.length - 1];
-                               if (lastTurn?.type === 'tool' && lastTurn?.isPartial) return prev; // Avoid duplicate tool messages
-                               return [...prev, {type: 'tool', text: sourceText, isPartial: true}]
-                           });
-                       }
+                        const base64EncodedAudioString = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+                        if (base64EncodedAudioString) {
+                            setIsSpeaking(true);
+                            nextStartTime.current = Math.max(
+                                nextStartTime.current,
+                                outputAudioContextRef.current!.currentTime,
+                            );
+                            const audioBuffer = await decodeAudioData(
+                                decode(base64EncodedAudioString),
+                                outputAudioContextRef.current!,
+                                24000,
+                                1,
+                            );
+                            const source = outputAudioContextRef.current!.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(outputAudioContextRef.current!.destination);
+                            source.addEventListener('ended', () => {
+                                outputSources.delete(source);
+                                if (outputSources.size === 0) setIsSpeaking(false);
+                            });
 
-                       if (message.serverContent?.inputTranscription) {
-                            currentInputTranscription.current += message.serverContent.inputTranscription.text;
+                            source.start(nextStartTime.current);
+                            nextStartTime.current = nextStartTime.current + audioBuffer.duration;
+                            outputSources.add(source);
+                        } else {
+                           if (outputSources.size === 0) setIsSpeaking(false);
+                        }
+
+                        if (message.serverContent?.interrupted) {
+                            outputSources.forEach(source => source.stop());
+                            outputSources.clear();
+                            nextStartTime.current = 0;
+                            setIsSpeaking(false);
+                        }
+                        
+                        let newAssistantTurn: ConversationTurn | null = null;
+                        
+                        if (message.serverContent?.outputTranscription) {
+                            setIsReceivingText(true);
+                            const text = message.serverContent.outputTranscription.text;
+                            currentOutputTranscription.current += text;
+                            newAssistantTurn = { type: 'assistant', text: currentOutputTranscription.current, isPartial: true };
+                        }
+                        
+                        if (message.serverContent?.inputTranscription) {
+                            const text = message.serverContent.inputTranscription.text;
+                            currentInputTranscription.current += text;
                             setConversation(prev => {
                                 const last = prev[prev.length - 1];
                                 if (last?.type === 'user' && last.isPartial) {
                                     return [...prev.slice(0, -1), { ...last, text: currentInputTranscription.current }];
                                 }
-                                return [...prev.filter(t => t.type !== 'system'), { type: 'user', text: currentInputTranscription.current, isPartial: true }];
+                                return [...prev, { type: 'user', text: currentInputTranscription.current, isPartial: true }];
                             });
                         }
-                         if (message.serverContent?.outputTranscription) {
-                            setIsReceivingText(true);
-                            currentOutputTranscription.current += message.serverContent.outputTranscription.text;
-                            setConversation(prev => {
-                                // Fix: Use `let` for variables that need reassignment and work with a copy of the state array.
-                                let conversation = prev;
-                                let last = prev[prev.length - 1];
-                                
-                                // Replace partial tool message with assistant message
-                                if(last?.type === 'tool' && last.isPartial) {
-                                  conversation = prev.slice(0, -1);
-                                  last = conversation[conversation.length - 1];
-                                }
 
-                                if (last?.type === 'assistant' && last.isPartial) {
-                                    return [...conversation.slice(0, -1), { ...last, text: currentOutputTranscription.current, grounding }];
+                        if (message.toolCall) {
+                            for (const fc of message.toolCall.functionCalls) {
+                                let result: any;
+                                let toolMessage = `Consulting ${fc.name}...`;
+
+                                if (fc.name === 'getCurrentLocation') {
+                                    result = locationRef.current ? JSON.stringify(locationRef.current) : "Location not available.";
+                                } else if (fc.name === 'navigateToPage') {
+                                    const page = fc.args.page as Page;
+                                    onNavigate(page);
+                                    result = `Navigating to ${page}.`;
+                                    toolMessage = t.assistant_navigating.replace('{page}', page);
                                 }
-                                return [...conversation, { type: 'assistant', text: currentOutputTranscription.current, isPartial: true, grounding }];
-                            });
+                                
+                                setConversation(prev => [...prev.map(t => ({...t, isPartial: false})), { type: 'tool', text: toolMessage }]);
+
+                                sessionPromiseRef.current?.then((session) => {
+                                    session.sendToolResponse({
+                                        functionResponses: {
+                                            id: fc.id,
+                                            name: fc.name,
+                                            response: { result: result },
+                                        }
+                                    })
+                                });
+                            }
                         }
+
                         if (message.serverContent?.turnComplete) {
                             setIsReceivingText(false);
-                            const finalAssistantText = currentOutputTranscription.current;
-                            const suggestionRegex = /\[Suggestions:\s*(.*?)\]/s;
-                            const match = finalAssistantText.match(suggestionRegex);
-                            let suggestions: string[] = [];
-                            if (match && match[1]) {
-                                try {
-                                    suggestions = JSON.parse(`[${match[1]}]`);
-                                } catch (e) { console.error("Failed to parse suggestions"); }
+                            if (currentInputTranscription.current) {
+                                setConversation(prev => prev.map(t => t.type === 'user' && t.isPartial ? { ...t, text: currentInputTranscription.current, isPartial: false } : t));
                             }
-                            const cleanedText = finalAssistantText.replace(suggestionRegex, '').trim();
-
-                            setConversation(prev => prev.map(turn => turn.isPartial ? {...turn, isPartial: false, text: turn.type === 'assistant' ? cleanedText : turn.text, suggestions} : turn));
+                            if (currentOutputTranscription.current) {
+                                newAssistantTurn = { type: 'assistant', text: currentOutputTranscription.current, isPartial: false };
+                            }
                             currentInputTranscription.current = '';
                             currentOutputTranscription.current = '';
                         }
-                        
-                        const audioData = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-                        if (audioData && outputAudioContextRef.current?.state === 'running') {
-                           setIsSpeaking(true);
-                           const audioContext = outputAudioContextRef.current;
-                           const audioBuffer = await decodeAudioData(decode(audioData), audioContext, 24000, 1);
-                           const source = audioContext.createBufferSource();
-                           source.buffer = audioBuffer;
-                           source.connect(audioContext.destination);
-                           
-                           nextStartTime.current = Math.max(nextStartTime.current, audioContext.currentTime);
-                           source.start(nextStartTime.current);
-                           nextStartTime.current += audioBuffer.duration;
 
-                           outputSources.add(source);
-                           source.onended = () => {
-                                outputSources.delete(source);
-                                if (outputSources.size === 0) setIsSpeaking(false);
-                           };
+                        if (newAssistantTurn) {
+                            setConversation(prev => {
+                                const last = prev[prev.length - 1];
+                                if (last?.type === 'assistant' && last.isPartial) {
+                                    return [...prev.slice(0, -1), { ...newAssistantTurn! }];
+                                }
+                                return [...prev.map(t => ({ ...t, isPartial: false })), newAssistantTurn!];
+                            });
                         }
                     },
-                    onerror: (e: any) => {
+                    onerror: (e: ErrorEvent) => {
                         console.error('Session error:', e);
-                        setConversation([{ type: 'system', text: 'Session error. Please try again.' }]);
-                        stopSession(false);
+                        setConversation(prev => [...prev, { type: 'system', text: `Connection error: ${e.message}. Please try again.`}]);
+                        stopSession();
                     },
-                    onclose: () => stopSession(false),
+                    onclose: () => {
+                        console.log('Session closed');
+                        stopSession();
+                    },
                 },
                 config: {
                     responseModalities: [Modality.AUDIO],
-                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
+                    },
+                    systemInstruction,
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
-                    tools: [{ googleSearch: {} }, { googleMaps: {} }, { functionDeclarations: [getCurrentLocationDeclaration, navigateToPageDeclaration] }],
-                    systemInstruction
+                    tools: [{ functionDeclarations: [getCurrentLocationDeclaration, navigateToPageDeclaration] }],
                 },
             };
-
-            if (location) {
-                connectRequest.toolConfig = { retrievalConfig: { latLng: { latitude: location.latitude, longitude: location.longitude }}};
-            }
-
+            
             sessionPromiseRef.current = ai.live.connect(connectRequest);
-        } catch (error: any) {
-            console.error("Failed to start session:", error);
-            setConversation([{ type: 'system', text: 'Failed to start. Check permissions and API key.' }]);
+            await sessionPromiseRef.current;
+
+        } catch (error) {
+            console.error('Failed to start session:', error);
+            setConversation(prev => [...prev, { type: 'system', text: `Failed to connect. Please check permissions and API key.` }]);
             setIsConnecting(false);
         }
-    }, [stopSession, voice, language, outputSources, location, user, onNavigate, t, conversation.length, initialHistory]);
+    }, [user, voice, stopSession, conversation, onNavigate, t]);
 
+    // FIX: Added return statement to export the hook's state and methods.
     return {
         isConnecting,
         isConnected,

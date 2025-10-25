@@ -34,17 +34,17 @@ const Header: React.FC<HeaderProps> = ({ openNav }) => {
          <header className="glassmorphism-enhanced absolute top-0 left-0 right-0 h-16 px-4 flex items-center justify-between z-20 text-base-content-dark">
             {/* Left Side */}
             <div className="flex items-center">
-                 <h2 className="text-lg font-bold">
-                    <span className="text-secondary">{t.home_title_ar}</span>
-                    <span className="mx-1 text-white/50">|</span>
-                    <span className="text-white">{t.home_title_en}</span>
+                 <h2 className="text-subtitle font-bold">
+                    <span className="text-primary">{t.home_title_ar}</span>
+                    <span className="mx-1 text-base-content-dark/50">|</span>
+                    <span className="text-base-content-dark">{t.home_title_en}</span>
                 </h2>
             </div>
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
                 <NotificationBell />
-                <button onClick={handleNavClick} className="ripple-container p-2 -mr-2 rounded-full hover:bg-base-300/50 dark:hover:bg-base-dark-300/50 transition-transform active:scale-95" aria-label={t.openMenu}>
+                <button onClick={handleNavClick} className="ripple-container p-2 -mr-2 rounded-full hover:bg-white/10 transition-transform active:scale-95" aria-label={t.openMenu}>
                     <MenuIcon />
                 </button>
             </div>

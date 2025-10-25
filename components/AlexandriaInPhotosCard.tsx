@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { AlexandriaPhoto } from '../types';
@@ -7,7 +6,11 @@ import { useTranslations } from '../hooks/useTranslations';
 
 const PHOTOS_CACHE_KEY = 'alexPhotosCache';
 
-const AlexandriaInPhotosCard: React.FC = () => {
+interface AlexandriaInPhotosCardProps {
+    shouldFetch: boolean;
+}
+
+const AlexandriaInPhotosCard: React.FC<AlexandriaInPhotosCardProps> = ({ shouldFetch }) => {
     const t = useTranslations();
     const [photos, setPhotos] = useState<AlexandriaPhoto[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +37,8 @@ const AlexandriaInPhotosCard: React.FC = () => {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             const prompt = `
-              Find 3 recent, beautiful, and high-quality public photos of Alexandria, Egypt from the web.
-              Focus on iconic landmarks, seascapes, or vibrant street scenes.
+              Find 3 recent online articles or posts about Alexandria, Egypt that feature prominent images.
+              For each one, provide the source URL, a description of the main image, and a direct URL to that image.
               Respond ONLY with a single, valid JSON array of objects. Each object must have three keys: "imageUrl", "description", and "url" (the source page URL).
               Example: [{"imageUrl": "https://example.com/photo.jpg", "description": "Sunset over the Stanley Bridge", "url": "https://source.com/page"}]
             `;
@@ -54,14 +57,16 @@ const AlexandriaInPhotosCard: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetchPhotos();
-    }, [fetchPhotos]);
+        if (shouldFetch) {
+            fetchPhotos();
+        }
+    }, [fetchPhotos, shouldFetch]);
     
     const isCardLoading = isLoading || (isTranslating && !!photos);
 
     return (
-        <div className="bg-base-dark-200/80 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-white/10 h-full flex flex-col">
-            <h3 className="text-base font-semibold text-secondary mb-2">{t.alexandria_in_photos}</h3>
+        <div className="glassmorphism-enhanced tilt-card p-4 rounded-xl shadow-lg h-full flex flex-col">
+            <h3 className="text-subtitle text-secondary mb-2">{t.alexandria_in_photos}</h3>
             {isCardLoading ? (
                 <div className="flex-1 grid grid-cols-3 gap-2 animate-pulse">
                     <div className="bg-base-dark-300 rounded-lg"></div>
@@ -78,7 +83,7 @@ const AlexandriaInPhotosCard: React.FC = () => {
                         <a href={photo.url} key={index} target="_blank" rel="noopener noreferrer" className="block relative rounded-lg overflow-hidden group">
                             <img src={photo.imageUrl} alt={photo.description} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                            <p className="absolute bottom-1 left-1.5 text-white text-[10px] leading-tight font-medium drop-shadow-sm">{photo.description}</p>
+                            <p className="absolute bottom-1 left-1.5 text-white text-caption leading-tight font-medium drop-shadow-sm">{photo.description}</p>
                         </a>
                     ))}
                 </div>

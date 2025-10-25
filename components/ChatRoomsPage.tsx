@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { GoogleGenAI, Modality } from "@google-ai/generativelanguage";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { ChatMessage } from '../types';
 import { useApp } from '../hooks/useApp';
 import { useTranslations } from '../hooks/useTranslations';
@@ -145,7 +145,7 @@ const ChatRoomsPage: React.FC<ChatRoomsPageProps> = ({ openNav }) => {
   const handleAskAlexCommand = async (query: string) => {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     await addChatMessage(currentRoom, { username: 'Alex Assistant', text: `Thinking about "${query}"...`, status: 'sent' });
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: query, config: { tools: [{ googleSearch: {} }] } });
+    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: query, config: { tools: [{ googleSearch: {} }, { googleMaps: {} }] } });
     await addChatMessage(currentRoom, { username: 'Alex Assistant', text: response.text.trim(), status: 'sent' });
   };
   
@@ -233,10 +233,10 @@ const ChatRoomsPage: React.FC<ChatRoomsPageProps> = ({ openNav }) => {
           <Header openNav={openNav} />
         
           <div className="absolute top-16 left-0 right-0 z-10 px-4 py-2 bg-base-100/80 dark:bg-base-dark-100/80 backdrop-blur-sm flex items-center justify-between">
-              <button onClick={() => setIsRoomSelectionOpen(true)} className="text-left font-bold text-lg hover:opacity-80">
+              <button onClick={() => setIsRoomSelectionOpen(true)} className="text-left font-bold text-lg hover:opacity-80 text-base-content dark:text-base-content-dark">
                   {ALEXANDRIA_NEIGHBORHOODS.find(n => n.en === currentRoom)?.[t.language === 'ar' ? 'ar' : 'en']}
               </button>
-              <div className="text-sm opacity-70">
+              <div className="text-sm opacity-70 text-base-content dark:text-base-content-dark">
                   {usersInRoom.length} {t.users_in_room}
               </div>
           </div>
@@ -268,8 +268,8 @@ const ChatRoomsPage: React.FC<ChatRoomsPageProps> = ({ openNav }) => {
                       className="flex-1 w-full px-4 py-2 border border-base-300 dark:border-base-dark-300 rounded-full bg-base-200 dark:bg-base-dark-200"
                   />
                   {messages.length > 10 && <button onClick={handleCatchUp} className="p-2 text-sm font-semibold text-secondary hover:underline whitespace-nowrap">{t.catch_me_up}</button>}
-                  <button onClick={handleSendMessage} disabled={isSending || !newMessage.trim()} className="ripple-container p-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                      {isSending ? <div className="w-6 h-6 border-2 border-white/50 border-t-white rounded-full animate-spin"></div> : <SendIcon />}
+                  <button onClick={handleSendMessage} disabled={isSending || !newMessage.trim()} className="ripple-container p-2 rounded-full bg-primary text-base-content-dark hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                      {isSending ? <div className="w-6 h-6 border-2 border-base-content-dark/50 border-t-base-content-dark rounded-full animate-spin"></div> : <SendIcon />}
                   </button>
               </div>
           </footer>

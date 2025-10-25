@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { GoogleGenAI, Modality } from "@google-ai/generativelanguage";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { useTranslations } from '../hooks/useTranslations';
 import { ALEXANDRIA_NEIGHBORHOODS } from '../i18n';
 import { ChatRoomInfo } from '../types';

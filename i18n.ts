@@ -177,6 +177,16 @@ export const translations = {
     suggest_price: "Suggest Price",
     moderation_failed: "This listing was flagged for violating community guidelines and was not posted.",
     no_listings_found: "No listings found. Be the first to sell something!",
+    // Directory
+    directory: 'Official Directory',
+    directory_title: 'Official Directory',
+    directory_subtitle: 'Find city contacts and emergency services',
+    emergency_numbers: 'Emergency Numbers',
+    police: 'Police',
+    ambulance: 'Ambulance',
+    fire_department: 'Fire Department',
+    search_directory_placeholder: 'Search for a department or contact...',
+    no_contacts_found: 'No contacts found matching your search.',
   },
   ar: {
     header_title: 'مساعد Gemini الصوتي',
@@ -355,6 +365,16 @@ export const translations = {
     suggest_price: "اقترح سعرًا",
     moderation_failed: "تم رفض هذا الإعلان لمخالفته إرشادات المجتمع.",
     no_listings_found: "لا توجد إعلانات. كن أول من يبيع شيئًا!",
+    // Directory
+    directory: 'الدليل الرسمي',
+    directory_title: 'الدليل الرسمي',
+    directory_subtitle: 'ابحث عن جهات الاتصال وخدمات الطوارئ بالمدينة',
+    emergency_numbers: 'أرقام الطوارئ',
+    police: 'الشرطة',
+    ambulance: 'الإسعاف',
+    fire_department: 'المطافئ',
+    search_directory_placeholder: 'ابحث عن إدارة أو جهة اتصال...',
+    no_contacts_found: 'لم يتم العثور على جهات اتصال تطابق بحثك.',
   }
 };
 

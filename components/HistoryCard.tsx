@@ -9,6 +9,20 @@ interface HistoryCardProps {
   audioState: 'loading' | 'playing' | null;
 }
 
+const createRipple = (event: React.MouseEvent<HTMLElement>) => {
+    const button = event.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add("ripple");
+    const ripple = button.getElementsByClassName("ripple")[0];
+    if (ripple) ripple.remove();
+    button.appendChild(circle);
+};
+
 const HistoryCard: React.FC<HistoryCardProps> = ({ place, onReadMore, onPlayAudio, audioState }) => {
   const t = useTranslations();
   const [sliderPos, setSliderPos] = useState(50);
@@ -54,12 +68,25 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ place, onReadMore, onPlayAudi
     };
   }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
-  const handleShowOnMap = (e: React.MouseEvent) => {
+  const handleShowOnMap = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    createRipple(e);
     if (place.coordinates) {
       window.open(`https://www.google.com/maps?q=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
     }
   };
+
+  const handleReadMoreClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      createRipple(e);
+      onReadMore();
+  }
+
+  const handlePlayAudioClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      createRipple(e);
+      onPlayAudio();
+  }
 
   const AudioButtonIcon = () => {
     if (audioState === 'loading') return <div className="w-4 h-4 border-2 border-current/50 border-t-secondary rounded-full animate-spin"></div>;
@@ -68,10 +95,10 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ place, onReadMore, onPlayAudi
   };
 
   return (
-    <div className="relative rounded-xl shadow-lg overflow-hidden group h-80 tilt-card" style={{ transformStyle: 'preserve-3d' }}>
+    <div className="relative rounded-xl shadow-lg overflow-hidden group aspect-[3/4] tilt-card" style={{ transformStyle: 'preserve-3d' }}>
       <div ref={containerRef} className="history-slider-container">
         {/* Modern Image (Bottom) */}
-        {!isImageLoaded && <div className="absolute inset-0 bg-base-dark-300 animate-pulse"></div>}
+        {!isImageLoaded && <div className="absolute inset-0 bg-base-300 dark:bg-base-dark-300 animate-pulse"></div>}
         <img src={place.modernImageUrl} alt={place.name} className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`} onLoad={() => setIsImageLoaded(true)} />
 
         {/* Ancient Image (Top, clipped) */}
@@ -93,14 +120,14 @@ const HistoryCard: React.FC<HistoryCardProps> = ({ place, onReadMore, onPlayAudi
       
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none"></div>
 
-      <div className="absolute p-4 h-full flex flex-col justify-end text-white z-20">
-        <h3 className="text-xl font-semibold mb-1 drop-shadow-md">{place.name}</h3>
-        <p className="text-sm text-secondary mb-2 font-medium drop-shadow-sm">{place.era}</p>
-        <p className="text-white/90 text-sm line-clamp-2">{place.description}</p>
+      <div className="absolute bottom-0 left-0 right-0 p-4 h-full flex flex-col justify-end text-white z-20">
+        <h3 className="text-title font-serif-special mb-1 drop-shadow-md">{place.name}</h3>
+        <p className="text-sm text-secondary mb-2 font-bold drop-shadow-sm">{place.era}</p>
+        <p className="text-body text-white/90 line-clamp-2">{place.description}</p>
         <div className="flex items-center gap-2 mt-4">
-          <button onClick={(e) => { e.stopPropagation(); onReadMore(); }} className="px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full backdrop-blur-sm border border-white/20 hover:bg-white/30 transition-colors">{t.read_more}</button>
-          {place.coordinates && <button onClick={handleShowOnMap} className="px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full backdrop-blur-sm border border-white/20 hover:bg-white/30 transition-colors">{t.show_on_map}</button>}
-          {place.narrative && <button onClick={(e) => { e.stopPropagation(); onPlayAudio(); }} className="p-2 w-8 h-8 flex items-center justify-center bg-white/20 text-white text-xs font-semibold rounded-full backdrop-blur-sm border border-white/20 hover:bg-white/30 transition-colors"><AudioButtonIcon /></button>}
+          <button onClick={handleReadMoreClick} className="ripple-container px-3 py-1 bg-base-content-dark/20 text-base-content-dark text-caption font-semibold rounded-full backdrop-blur-sm border border-base-content-dark/20 hover:bg-base-content-dark/30 transition-colors">{t.read_more}</button>
+          {place.coordinates && <button onClick={handleShowOnMap} className="ripple-container px-3 py-1 bg-base-content-dark/20 text-base-content-dark text-caption font-semibold rounded-full backdrop-blur-sm border border-base-content-dark/20 hover:bg-base-content-dark/30 transition-colors">{t.show_on_map}</button>}
+          {place.narrative && <button onClick={handlePlayAudioClick} className="ripple-container p-2 w-8 h-8 flex items-center justify-center bg-base-content-dark/20 text-base-content-dark text-xs font-semibold rounded-full backdrop-blur-sm border border-base-content-dark/20 hover:bg-base-content-dark/30 transition-colors"><AudioButtonIcon /></button>}
         </div>
       </div>
     </div>

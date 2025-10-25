@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MarketplaceItem } from '../types';
 import { GoogleGenAI } from '@google/genai';
@@ -53,9 +52,9 @@ const FindSimilarModal: React.FC<FindSimilarModalProps> = ({ item, allItems, onC
     return (
         <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4" onClick={onClose}>
             <div className="bg-base-dark-100 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="p-4 border-b border-white/10">
+                <div className="p-4 border-b border-base-content-dark/10">
                     <h2 className="text-xl font-bold text-secondary">{t.find_similar}</h2>
-                    <p className="text-sm text-white/70">For "{item.title}"</p>
+                    <p className="text-sm text-base-content-dark/70">For "{item.title}"</p>
                 </div>
                 <div className="flex-1 p-4 overflow-y-auto">
                     {isLoading ? (
@@ -69,7 +68,7 @@ const FindSimilarModal: React.FC<FindSimilarModalProps> = ({ item, allItems, onC
                             ))}
                         </div>
                     ) : (
-                        <p className="text-center text-white/70">No similar items found.</p>
+                        <p className="text-center text-base-content-dark/70">No similar items found.</p>
                     )}
                 </div>
             </div>

@@ -20,6 +20,7 @@ const MarketplaceIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" 
 const ChatIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>;
 const EventsIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
 const ServicesIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+const DirectoryIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>;
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 const DASHBOARD_CACHE_KEY = 'dashboardDataCache';
@@ -43,7 +44,7 @@ const HomePageSkeleton = () => (
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-base-dark-200/50 p-4 rounded-xl shadow-lg h-28"></div>
+                <div key={i} className="bg-base-dark-200/50 p-4 rounded-xl shadow-lg h-20"></div>
             ))}
         </div>
     </div>
@@ -56,6 +57,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRevalidating, setIsRevalidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadSignal, setLoadSignal] = useState(1);
   
   const { translatedData, isTranslating } = useAutoTranslator(dashboardData);
   const weather = translatedData?.weather;
@@ -82,7 +84,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
           - "current" must be an object with "temperature" (string, e.g., '28°C'), "condition" (string, e.g., 'Sunny'), and "location" (string, 'Alexandria').
           - "forecast" must be an array of exactly 3 objects for the next 3 days. Each object must have "day" (string, e.g., "Tomorrow"), "high" (string, e.g., '30°C'), "low" (string, e.g., '22°C'), and "condition" (string, e.g., 'Partly Cloudy').
         - "traffic": An object with an "overallStatus" (string, e.g., "Moderate") and a "roads" key. "roads" must be a JSON array of the 5 main roads in Alexandria. Each object must have "roadName" and "status" (one of 'Heavy', 'Moderate', or 'Light').
-        - "news": An array of the 5 latest news headlines for Egypt. Each object must have "headline", "source", and "url".
+        - "news": An array of the 5 latest news headlines for Egypt. Each object must have "headline", "source", and "url". Prioritize official news from http://www.alexandria.gov.eg/news.
         `;
 
         const response = await ai.models.generateContent({ model, contents: prompt, config: { tools: [{ googleSearch: {} }, { googleMaps: {} }] } });
@@ -99,6 +101,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
     } finally {
       setIsInitialLoading(false);
       setIsRevalidating(false);
+      setLoadSignal(2);
     }
   }, []);
 
@@ -117,7 +120,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
   const isCardLoading = isRevalidating || (isTranslating && !!dashboardData);
 
   return (
-    <div className="relative flex-1 w-full bg-base-dark-100 text-base-content-dark p-4 pt-20 flex flex-col overflow-hidden">
+    <div className="relative flex-1 w-full bg-base-dark-100 text-base-content-dark p-4 pt-20 flex flex-col">
       <div className="absolute inset-0 z-0 overflow-hidden">
           <div className="aurora-blob w-[600px] h-[500px] bg-primary/30" style={{'--start-x': '-20%', '--start-y': '10%', '--end-x': '40%', '--end-y': '80%'}}></div>
           <div className="aurora-blob w-[500px] h-[500px] bg-secondary/20" style={{'--start-x': '80%', '--start-y': '20%', '--end-x': '20%', '--end-y': '90%', animationDuration: '30s'}}></div>
@@ -126,26 +129,26 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
       
       <Header openNav={openNav} />
       
-      <main className="flex-1 overflow-y-auto z-10">
+      <main className="flex-1 z-10 overflow-y-auto pr-2">
         {isInitialLoading ? (
           <HomePageSkeleton />
         ) : (
           <div className="space-y-4" style={{ perspective: '1000px' }}>
               <div className="animate-fade-in-up">
-                <DailyBriefingCard />
+                <DailyBriefingCard shouldFetch={loadSignal >= 2} onFetchComplete={() => setLoadSignal(3)} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="animate-fade-in-up" style={{animationDelay: '100ms'}}>
-                    <ProTipCard />
+                    <ProTipCard shouldFetch={loadSignal >= 3} />
                   </div>
                   <div className="animate-fade-in-up" style={{animationDelay: '150ms'}}>
-                    <AlexandriaInPhotosCard />
+                    <AlexandriaInPhotosCard shouldFetch={loadSignal >= 3} />
                   </div>
               </div>
               
               <div className="animate-fade-in-up" style={{animationDelay: '200ms'}}>
-                  <InfoCard title={t.weather} icon={<WeatherIcon />} isLoading={isCardLoading} error={error} className="h-auto min-h-48">
+                  <InfoCard title={t.weather} icon={<WeatherIcon />} isLoading={isCardLoading} error={error} className="min-h-48">
                       {weather && <WeatherChart weather={weather} />}
                   </InfoCard>
               </div>
@@ -157,7 +160,6 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
                           icon={<TrafficIcon />} 
                           isLoading={isCardLoading} 
                           error={error}
-                          className="h-48"
                       >
                           {traffic && traffic.roads && <TrafficChart traffic={traffic} />}
                       </InfoCard>
@@ -168,7 +170,6 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
                           icon={<NewsIcon />} 
                           isLoading={isCardLoading} 
                           error={error} 
-                          className="h-48"
                           contentClassName="items-start justify-start p-1"
                       >
                           {news && news.length > 0 && (
@@ -176,7 +177,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
                                   <ul className="space-y-1 text-left w-full text-sm">
                                       {news.map((item, index) => (
                                           <li key={index}>
-                                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="block p-1 rounded hover:bg-black/20">
+                                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="block p-1 rounded hover:bg-base-content-dark/10">
                                                   <p className="font-semibold line-clamp-2">{item.headline}</p>
                                                   <p className="opacity-70 text-xs">{item.source}</p>
                                               </a>
@@ -189,12 +190,13 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate, openNav }) => {
                   </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="animate-fade-in-up" style={{animationDelay: '350ms'}}><InfoCard title={t.local_services_title} icon={<ServicesIcon />} isLoading={false} error={null} onClick={() => onNavigate('localServices')} className="h-28"><p className="font-semibold">{t.local_services_card_title}</p></InfoCard></div>
-                  <div className="animate-fade-in-up" style={{animationDelay: '400ms'}}><InfoCard title={t.events_title} icon={<EventsIcon />} isLoading={false} error={null} onClick={() => onNavigate('events')} className="h-28"><p className="font-semibold">{t.events_card_title}</p></InfoCard></div>
-                  <div className="animate-fade-in-up" style={{animationDelay: '450ms'}}><InfoCard title={t.history_title} icon={<HistoryIcon />} isLoading={false} error={null} onClick={() => onNavigate('history')} className="h-28"><p className="font-semibold">{t.history_card_title}</p></InfoCard></div>
-                  <div className="animate-fade-in-up" style={{animationDelay: '500ms'}}><InfoCard title={t.marketplace_title} icon={<MarketplaceIcon />} isLoading={false} error={null} onClick={() => onNavigate('marketplace')} className="h-28"><p className="font-semibold">{t.marketplace_card_title}</p></InfoCard></div>
-                  <div className="animate-fade-in-up" style={{animationDelay: '550ms'}}><InfoCard title={t.chat_rooms_title} icon={<ChatIcon />} isLoading={false} error={null} onClick={() => onNavigate('chatRooms')} className="h-28"><p className="font-semibold">{t.chat_rooms_card_title}</p></InfoCard></div>
-                  <div className="animate-fade-in-up" style={{animationDelay: '600ms'}}><InfoCard title={t.socialBuzz} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>} isLoading={false} error={null} onClick={() => onNavigate('socialBuzz')} className="h-28"><p className="font-semibold">{t.social_buzz_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '350ms'}}><InfoCard title={t.local_services_title} icon={<ServicesIcon />} isLoading={false} error={null} onClick={() => onNavigate('localServices')}><p className="text-body-lg font-semibold">{t.local_services_card_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '400ms'}}><InfoCard title={t.events_title} icon={<EventsIcon />} isLoading={false} error={null} onClick={() => onNavigate('events')}><p className="text-body-lg font-semibold">{t.events_card_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '450ms'}}><InfoCard title={t.history_title} icon={<HistoryIcon />} isLoading={false} error={null} onClick={() => onNavigate('history')}><p className="text-body-lg font-semibold">{t.history_card_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '500ms'}}><InfoCard title={t.marketplace_title} icon={<MarketplaceIcon />} isLoading={false} error={null} onClick={() => onNavigate('marketplace')}><p className="text-body-lg font-semibold">{t.marketplace_card_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '550ms'}}><InfoCard title={t.chat_rooms_title} icon={<ChatIcon />} isLoading={false} error={null} onClick={() => onNavigate('chatRooms')}><p className="text-body-lg font-semibold">{t.chat_rooms_card_title}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '600ms'}}><InfoCard title={t.directory_title} icon={<DirectoryIcon />} isLoading={false} error={null} onClick={() => onNavigate('directory')}><p className="text-body-lg font-semibold">{t.directory_subtitle}</p></InfoCard></div>
+                  <div className="animate-fade-in-up" style={{animationDelay: '650ms'}}><InfoCard title={t.socialBuzz} icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>} isLoading={false} error={null} onClick={() => onNavigate('socialBuzz')}><p className="text-body-lg font-semibold">{t.social_buzz_title}</p></InfoCard></div>
               </div>
           </div>
         )}

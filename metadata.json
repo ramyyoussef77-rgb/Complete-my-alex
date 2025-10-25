@@ -1,5 +1,5 @@
 {
-  "name": "Gemini Voice Assistant",
+  "name": "Gemini my Alex completed ",
   "description": "An AI-powered voice assistant that leverages the Gemini Live API for real-time conversations, search grounding, and complex task handling, all within a sleek, futuristic interface.",
   "requestFramePermissions": [
     "microphone",

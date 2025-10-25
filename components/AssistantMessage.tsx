@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ConversationTurn } from '../types';
 
@@ -15,8 +14,8 @@ const AssistantMessage: React.FC<{ turn: ConversationTurn }> = ({ turn }) => {
 
     if (turn.type === 'tool') {
         return (
-            <div className="flex justify-center items-center my-2 text-sm text-cyan-300/80">
-                <div className="w-4 h-4 border-2 border-current/50 border-t-cyan-300 rounded-full animate-spin mr-2"></div>
+            <div className="flex justify-center items-center my-2 text-sm text-primary/80">
+                <div className="w-4 h-4 border-2 border-current/50 border-t-primary rounded-full animate-spin mr-2"></div>
                 {turn.text}
             </div>
         );
@@ -26,8 +25,8 @@ const AssistantMessage: React.FC<{ turn: ConversationTurn }> = ({ turn }) => {
 
     return (
         <div className={`flex flex-col animate-slide-in-bottom ${isUser ? 'items-end' : 'items-start'}`}>
-            <div className={`rounded-2xl p-3 max-w-[85%] ${isUser ? 'bg-accent/80' : 'bg-base-dark-200/80'} ${turn.isPartial ? 'opacity-70' : ''}`}>
-                <p className="text-lg whitespace-pre-wrap">{turn.text}</p>
+            <div className={`rounded-2xl p-3 max-w-[85%] ${isUser ? 'bg-primary/80' : 'bg-base-dark-200/80'} ${turn.isPartial ? 'opacity-70' : ''}`}>
+                <p className="text-body whitespace-pre-wrap">{turn.text}</p>
             </div>
             {!isUser && turn.grounding && turn.grounding.length > 0 && !turn.isPartial && (
                 <div className="flex flex-wrap gap-2 mt-2">

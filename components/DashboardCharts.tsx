@@ -1,12 +1,12 @@
 import React from 'react';
-import { WeatherData, TrafficData } from '../types';
+import { WeatherData, TrafficData, WeatherDay } from '../types';
 
 const AnimatedSun: React.FC = () => (
     <g>
-        <circle cx="0" cy="0" r="5" fill="#FFD740" />
+        <circle cx="0" cy="0" r="5" className="fill-secondary" />
         <g className="sun-rays" style={{ transformOrigin: 'center' }}>
             {[...Array(8)].map((_, i) => (
-                <line key={i} x1="0" y1="-9" x2="0" y2="-6" stroke="#FFD740" strokeWidth="1" strokeLinecap="round" transform={`rotate(${i * 45})`} />
+                <line key={i} x1="0" y1="-9" x2="0" y2="-6" className="stroke-secondary" strokeWidth="1" strokeLinecap="round" transform={`rotate(${i * 45})`} />
             ))}
         </g>
     </g>
@@ -23,10 +23,32 @@ const AnimatedRain: React.FC = () => (
     <g>
         <AnimatedCloud />
         {[...Array(3)].map((_, i) => (
-            <line key={i} x1={-5 + i * 5} y1="5" x2={-5 + i * 5} y2="10" stroke="#4FC3F7" strokeWidth="1" strokeLinecap="round" className="rain-drop" style={{ animationDelay: `${i * 0.2}s` }} />
+// FIX: Combined two `className` attributes into a single attribute to resolve the JSX error.
+            <line key={i} x1={-5 + i * 5} y1="5" x2={-5 + i * 5} y2="10" className="stroke-primary rain-drop" strokeWidth="1" strokeLinecap="round" style={{ animationDelay: `${i * 0.2}s` }} />
         ))}
     </g>
 );
+
+const getWeatherIcon = (condition: string) => {
+    const lowerCondition = condition.toLowerCase();
+    if (lowerCondition.includes('sun') || lowerCondition.includes('clear') || lowerCondition.includes('صحو') || lowerCondition.includes('شمس')) return <AnimatedSun />;
+    if (lowerCondition.includes('rain') || lowerCondition.includes('shower') || lowerCondition.includes('مطر')) return <AnimatedRain />;
+    if (lowerCondition.includes('cloud') || lowerCondition.includes('غائم')) return <AnimatedCloud />;
+    return <tspan>🌍</tspan>;
+};
+
+const ForecastDayColumn: React.FC<{day: WeatherDay}> = ({ day }) => (
+    <div className="flex flex-col items-center space-y-1">
+        <div className="w-8 h-8">
+            <svg viewBox="-15 -15 30 30">{getWeatherIcon(day.condition)}</svg>
+        </div>
+        <span className="text-sm font-bold">{day.high}</span>
+        <div className="w-1 h-10 bg-gradient-to-b from-secondary to-primary rounded-full"></div>
+        <span className="text-sm font-bold opacity-70">{day.low}</span>
+        <span className="text-xs opacity-60">{day.day}</span>
+    </div>
+);
+
 
 interface WeatherChartProps {
     weather: WeatherData;
@@ -34,60 +56,19 @@ interface WeatherChartProps {
 
 export const WeatherChart: React.FC<WeatherChartProps> = ({ weather }) => {
     const { forecast, current } = weather;
-    const temps = forecast.flatMap(d => [parseInt(d.high), parseInt(d.low)]);
-    const minTemp = Math.min(...temps) - 2;
-    const maxTemp = Math.max(...temps) + 2;
-    const tempRange = maxTemp - minTemp;
-    
-    const getPoint = (temp: number, index: number) => {
-        const x = 25 + index * 25;
-        const y = 80 - ((temp - minTemp) / tempRange) * 70;
-        return { x, y };
-    };
-
-    const highPoints = forecast.map((d, i) => getPoint(parseInt(d.high), i));
-    const lowPoints = forecast.map((d, i) => getPoint(parseInt(d.low), i));
-
-    const highPath = highPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-    const lowPath = lowPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-
-    const getWeatherIcon = (condition: string) => {
-        const lowerCondition = condition.toLowerCase();
-        if (lowerCondition.includes('sun') || lowerCondition.includes('clear') || lowerCondition.includes('صحو') || lowerCondition.includes('شمس')) return <AnimatedSun />;
-        if (lowerCondition.includes('rain') || lowerCondition.includes('shower') || lowerCondition.includes('مطر')) return <AnimatedRain />;
-        if (lowerCondition.includes('cloud') || lowerCondition.includes('غائم')) return <AnimatedCloud />;
-        return <tspan>🌍</tspan>;
-    };
 
     return (
-        <div className="w-full flex items-center justify-between p-2 text-base-content-dark">
+        <div className="w-full h-full flex items-center justify-between p-2 text-base-content-dark">
             <div className="text-left shrink-0 pr-4">
-                <p className="text-5xl font-bold">{current.temperature}</p>
+                <p className="text-4xl font-bold">{current.temperature}</p>
                 <p className="text-lg opacity-80">{current.condition}</p>
                 <p className="text-xs opacity-60">{current.location}</p>
             </div>
-            <svg viewBox="0 0 100 100" className="w-full h-auto">
-                <path d={highPath} fill="none" stroke="#FFB74D" strokeWidth="2" strokeLinecap="round" />
-                <path d={lowPath} fill="none" stroke="#4FC3F7" strokeWidth="2" strokeLinecap="round" />
-
-                {forecast.map((day, i) => (
-                    <g key={i}>
-                        {/* High temp point and label */}
-                        <circle cx={highPoints[i].x} cy={highPoints[i].y} r="2.5" fill="#FFB74D" />
-                        <text x={highPoints[i].x} y={highPoints[i].y - 6} textAnchor="middle" fill="#FFB74D" fontSize="8" fontWeight="bold">{day.high}</text>
-
-                        {/* Low temp point and label */}
-                        <circle cx={lowPoints[i].x} cy={lowPoints[i].y} r="2.5" fill="#4FC3F7" />
-                        <text x={lowPoints[i].x} y={lowPoints[i].y + 12} textAnchor="middle" fill="#4FC3F7" fontSize="8" fontWeight="bold">{day.low}</text>
-                        
-                        {/* Day label and icon */}
-                        <text x={highPoints[i].x} y="95" textAnchor="middle" fillOpacity="0.8" fontSize="8">{day.day}</text>
-                        <g transform={`translate(${highPoints[i].x}, 12) scale(1.2)`}>
-                            {getWeatherIcon(day.condition)}
-                        </g>
-                    </g>
+            <div className="flex-1 flex justify-around text-center">
+                {forecast.map((day) => (
+                    <ForecastDayColumn key={day.day} day={day} />
                 ))}
-            </svg>
+            </div>
         </div>
     );
 };
@@ -113,7 +94,7 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ traffic }) => {
                     const y = 5 + index * 19;
                     return (
                         <g key={index}>
-                            <text x="0" y={y + 8} fontSize="8" fill="currentColor" fillOpacity="0.8" className="truncate">{road.roadName}</text>
+                            <text x="0" y={y + 8} fontSize="7" fill="currentColor" fillOpacity="0.8" textLength="85" lengthAdjust="spacingAndGlyphs">{road.roadName}</text>
                             <rect 
                                 x="90" 
                                 y={y} 
@@ -122,7 +103,7 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ traffic }) => {
                                 rx="3" 
                                 fill={getStatusColor(road.status)} 
                             />
-                            <text x="140" y={y + 8.5} textAnchor="middle" fontSize="7" fill="white" fontWeight="bold">{road.status}</text>
+                            <text x="140" y={y + 8.5} textAnchor="middle" fontSize="6" fill="white" fontWeight="bold">{road.status}</text>
                         </g>
                     );
                 })}

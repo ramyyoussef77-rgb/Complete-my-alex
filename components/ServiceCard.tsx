@@ -1,13 +1,27 @@
-
 import React from 'react';
 import { LocalService } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
+import { useApp } from '../hooks/useApp';
 
 interface ServiceCardProps {
     service: LocalService;
     isSelected: boolean;
     onSelect: () => void;
 }
+
+const createRipple = (event: React.MouseEvent<HTMLElement>) => {
+    const button = event.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add("ripple");
+    const ripple = button.getElementsByClassName("ripple")[0];
+    if (ripple) ripple.remove();
+    button.appendChild(circle);
+};
 
 const StarRating: React.FC<{ rating?: number }> = ({ rating = 0 }) => (
     <div className="flex items-center">
@@ -21,17 +35,23 @@ const StarRating: React.FC<{ rating?: number }> = ({ rating = 0 }) => (
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onSelect }) => {
     const t = useTranslations();
-    const language = useTranslations().language;
+    const { language } = useApp();
+
+    const handleSelect = (e: React.MouseEvent<HTMLButtonElement>) => {
+        createRipple(e);
+        onSelect();
+    };
 
     return (
         <button
-            onClick={onSelect}
-            className={`block w-full text-left p-3 rounded-lg shadow-md transition-all duration-200 ${isSelected ? 'bg-primary/20 dark:bg-secondary/20 ring-2 ring-secondary' : 'bg-base-200 dark:bg-base-dark-200 hover:bg-base-300 dark:hover:bg-base-dark-300'}`}
+            onClick={handleSelect}
+            className={`ripple-container block w-full text-left p-3 rounded-lg shadow-md transition-all duration-200 glassmorphism-enhanced ${isSelected ? 'bg-primary/20 dark:bg-secondary/20 ring-2 ring-secondary' : 'hover:bg-white/10'}`}
         >
-            <h3 className="font-bold text-base-content dark:text-base-content-dark truncate">{service.name}</h3>
-            <p className="text-sm text-secondary font-semibold">{t[service.category.toLowerCase() as keyof typeof t] || service.category}</p>
+            <h3 className="text-subtitle truncate">{service.name}</h3>
+            {/* FIX: Cast the dynamic key to a keyof the translation object to satisfy TypeScript's type checker. */}
+            <p className="text-body text-secondary font-semibold">{t[service.category.toLowerCase() as keyof typeof t] || service.category}</p>
             
-            <div className="flex items-center justify-between text-xs text-base-content/80 dark:text-base-content-dark/80 mt-2">
+            <div className="flex items-center justify-between text-caption text-base-content/80 dark:text-base-content-dark/80 mt-2">
                 {service.starRating != null && (
                     <div className="flex items-center">
                         <StarRating rating={service.starRating} />
@@ -43,11 +63,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, isSelected, onSelect
 
             <div className={`flex items-center mt-2 ${language === 'ar' ? 'justify-end' : 'justify-between'}`}>
                 {service.isOpenNow != null &&
-                    <span className={`font-semibold px-2 py-0.5 rounded-full text-white text-xs ${service.isOpenNow ? 'bg-green-500' : 'bg-red-500'}`}>
+                    <span className={`font-semibold px-2 py-0.5 rounded-full text-white text-caption ${service.isOpenNow ? 'bg-green-500' : 'bg-red-500'}`}>
                         {service.isOpenNow ? t.open_now : 'Closed'}
                     </span>
                 }
-                {service.distance && <span className="font-semibold text-base-content/80 dark:text-base-content-dark/80 text-xs">{service.distance}</span>}
+                {service.distance && <span className="font-semibold text-base-content/80 dark:text-base-content-dark/80 text-caption">{service.distance}</span>}
             </div>
         </button>
     );

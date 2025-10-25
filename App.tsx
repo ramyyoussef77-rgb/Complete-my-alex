@@ -10,6 +10,7 @@ import SideNav from './components/SideNav';
 import FloatingActionButton from './components/FloatingActionButton';
 import LocationPermissionBanner from './components/LocationPermissionBanner';
 import ErrorBoundary from './components/ErrorBoundary';
+import StatusBar from './components/StatusBar';
 
 const HomePage = lazy(() => import('./components/HomePage'));
 const SocialBuzzPage = lazy(() => import('./components/SocialBuzzPage'));
@@ -21,12 +22,13 @@ const LoginPage = lazy(() => import('./components/LoginPage'));
 const EventsPage = lazy(() => import('./components/EventsPage'));
 const LocalServicesPage = lazy(() => import('./components/LocalServicesPage'));
 const AssistantPage = lazy(() => import('./components/AssistantPage'));
+const DirectoryPage = lazy(() => import('./components/DirectoryPage'));
 
 
-export type Page = 'home' | 'assistant' | 'socialBuzz' | 'history' | 'marketplace' | 'chatRooms' | 'settings' | 'events' | 'localServices';
+export type Page = 'home' | 'assistant' | 'socialBuzz' | 'history' | 'marketplace' | 'chatRooms' | 'settings' | 'events' | 'localServices' | 'directory';
 
 const App: React.FC = () => {
-    const { user, voice, language } = useApp();
+    const { user, voice, language, theme } = useApp();
     const [currentPage, setCurrentPage] = useState<Page>('home');
     const [isNavOpen, setIsNavOpen] = useState(false);
     const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
@@ -84,65 +86,67 @@ const App: React.FC = () => {
     useEffect(() => {
         if (currentPage === 'assistant' && !isConnected && !isConnecting && !isHistoryLoading) {
             startSession();
-        } else if (currentPage !== 'assistant' && (isConnected || isConnecting)) {
-            stopSession(true);
         }
-    }, [currentPage, isConnected, isConnecting, startSession, stopSession, isHistoryLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, isConnected, isConnecting, isHistoryLoading]);
+
+    const handleExitAssistant = () => {
+        stopSession(true); // true to save history on exit
+        navigateTo('home');
+    };
     
     if (!user) {
-        return <Suspense fallback={<div />}><LoginPage /></Suspense>;
+        return <Suspense fallback={<div></div>}><LoginPage /></Suspense>;
     }
     
-    const renderPage = () => {
-        const pageProps = { onNavigate: navigateTo, openNav: () => setIsNavOpen(true) };
-        switch(currentPage) {
-            case 'home': return <HomePage {...pageProps} />;
-            case 'socialBuzz': return <SocialBuzzPage {...pageProps} />;
-            case 'history': return <HistoryPage {...pageProps} />;
-            case 'marketplace': return <MarketplacePage {...pageProps} />;
-            case 'chatRooms': return <ChatRoomsPage {...pageProps} />;
-            case 'settings': return <SettingsPage {...pageProps} />;
-            case 'events': return <EventsPage {...pageProps} />;
-            case 'localServices': return <LocalServicesPage {...pageProps} location={currentLocation} geolocationError={geolocationError} />;
-            case 'assistant':
-                if (isHistoryLoading) {
-                    return <div className="flex-1 flex justify-center items-center bg-base-dark-100"><div className="w-12 h-12 border-4 border-current/20 border-t-secondary rounded-full animate-spin"></div></div>;
-                }
-                return (
-                    <AssistantPage
-                        conversation={conversation}
-                        isConnecting={isConnecting}
-                        isConnected={isConnected}
-                        isSpeaking={isSpeaking}
-                        isReceivingText={isReceivingText}
-                        onExit={() => navigateTo('home')}
-                        sendTextMessage={sendTextMessage}
-                        startSession={startSession}
-                    />
-                );
-            default:
-                return <HomePage {...pageProps} />;
-        }
-    }
-    
-    const shouldShowLocationBanner = geolocationError?.code === 1 && !isLocationBannerDismissed && currentPage !== 'localServices' && currentPage !== 'assistant';
+    const pages = {
+        'home': <HomePage onNavigate={navigateTo} openNav={() => setIsNavOpen(true)} />,
+        'socialBuzz': <SocialBuzzPage openNav={() => setIsNavOpen(true)} onNavigate={navigateTo}/>,
+        'history': <HistoryPage openNav={() => setIsNavOpen(true)} />,
+        'marketplace': <MarketplacePage openNav={() => setIsNavOpen(true)} />,
+        'chatRooms': <ChatRoomsPage openNav={() => setIsNavOpen(true)} />,
+        'settings': <SettingsPage openNav={() => setIsNavOpen(true)} />,
+        'events': <EventsPage openNav={() => setIsNavOpen(true)} />,
+        'localServices': <LocalServicesPage openNav={() => setIsNavOpen(true)} location={currentLocation} geolocationError={geolocationError} />,
+        'directory': <DirectoryPage openNav={() => setIsNavOpen(true)} />,
+        'assistant': null
+    };
 
     return (
-        <div className="relative h-screen w-screen overflow-hidden bg-base-100 dark:bg-base-dark-100 text-base-content dark:text-base-content-dark font-sans flex">
-            <SideNav isOpen={isNavOpen} onClose={() => setIsNavOpen(false)} onNavigate={navigateTo} currentPage={currentPage} />
-            <div className="flex-1 flex flex-col transition-transform duration-300" style={{ transform: isNavOpen ? 'translateX(256px)' : 'translateX(0)' }}>
-                {shouldShowLocationBanner && (
-                    <LocationPermissionBanner onDismiss={() => setIsLocationBannerDismissed(true)} />
-                )}
-                <div key={currentPage} className="flex-1 flex flex-col animate-page-fade-in">
-                    <ErrorBoundary>
-                        <Suspense fallback={<div className="flex-1 flex justify-center items-center"><div className="w-12 h-12 border-4 border-current/20 border-t-secondary rounded-full animate-spin"></div></div>}>
-                            {renderPage()}
+        <div className={`h-screen w-screen flex flex-col font-sans ${theme}`}>
+            <ErrorBoundary>
+                <div className="relative h-full w-full flex flex-col bg-base-100 dark:bg-base-dark-100 overflow-hidden">
+                    {currentPage === 'assistant' ? (
+                        <Suspense fallback={<div className="flex-1"></div>}>
+                            <AssistantPage
+                                conversation={conversation}
+                                isConnecting={isConnecting}
+                                isConnected={isConnected}
+                                isSpeaking={isSpeaking}
+                                isReceivingText={isReceivingText}
+                                onExit={handleExitAssistant}
+                                sendTextMessage={sendTextMessage}
+                                startSession={startSession}
+                            />
                         </Suspense>
-                    </ErrorBoundary>
+                    ) : (
+                        <>
+                           <StatusBar />
+                           <SideNav 
+                              isOpen={isNavOpen} 
+                              onClose={() => setIsNavOpen(false)} 
+                              onNavigate={navigateTo}
+                              currentPage={currentPage}
+                           />
+                           {geolocationError?.code === 1 && !isLocationBannerDismissed && <LocationPermissionBanner onDismiss={() => setIsLocationBannerDismissed(true)} />}
+                           <Suspense fallback={<div className="flex-1 pt-16 p-4">Loading...</div>}>
+                               {pages[currentPage]}
+                           </Suspense>
+                           <FloatingActionButton onClick={() => navigateTo('assistant')} />
+                        </>
+                    )}
                 </div>
-            </div>
-            {currentPage !== 'assistant' && <FloatingActionButton onClick={() => navigateTo('assistant')} />}
+            </ErrorBoundary>
         </div>
     );
 };

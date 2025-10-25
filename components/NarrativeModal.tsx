@@ -25,15 +25,15 @@ const NarrativeModal: React.FC<NarrativeModalProps> = ({ place, onClose }) => {
             onClick={onClose}
         >
             <div 
-                className="bg-parchment dark:bg-base-dark-200 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
+                className="bg-base-100 dark:bg-base-dark-200 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-6 border-b border-base-300 dark:border-base-dark-300">
-                    <h2 className="text-2xl font-bold text-base-content dark:text-base-content-dark">{place.name}</h2>
+                    <h2 className="text-2xl font-bold text-base-content dark:text-base-content-dark font-serif-special">{place.name}</h2>
                     <p className="text-secondary font-semibold">{place.era}</p>
                 </div>
                 <div className="flex-1 p-6 overflow-y-auto">
-                    <p className="text-lg leading-relaxed italic text-base-content/90 dark:text-base-content-dark/90">
+                    <p className="text-lg leading-relaxed italic text-base-content/90 dark:text-base-content-dark/90 font-serif-special">
                         "{place.narrative || 'No narrative available.'}"
                     </p>
                 </div>

@@ -55,7 +55,7 @@ const AssistantInput: React.FC<AssistantInputProps> = ({ onSendText, isConnectin
             <button
                 onClick={hasText ? handleSend : onMicClick}
                 disabled={isConnecting}
-                className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none ${hasText ? 'bg-secondary' : 'bg-gradient-to-br from-cyan-400 to-purple-500'} ${isConnecting ? 'animate-pulse' : ''}`}
+                className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none ${hasText ? 'bg-secondary' : 'bg-gradient-to-br from-primary to-accent'} ${isConnecting ? 'animate-pulse' : ''}`}
                 aria-label={hasText ? "Send message" : "Start voice session"}
             >
                 {isConnecting ? (

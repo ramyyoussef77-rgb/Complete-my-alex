@@ -32,13 +32,13 @@ const InfoCard: React.FC<InfoCardProps> = ({ title, icon, isLoading, error, chil
     >
       <div className="relative z-10 flex items-center text-base-content-dark/70 mb-2 transition-colors duration-300" style={{ transform: 'translateZ(20px)' }}>
         <span className="transition-transform duration-300 group-hover:scale-110">{icon}</span>
-        <h3 className="ml-2 font-semibold">{title}</h3>
+        <h3 className="ml-2 font-semibold text-subtitle">{title}</h3>
       </div>
       <div className={`relative z-10 flex-1 flex items-center justify-center text-center text-base-content-dark ${contentClassName || ''}`} style={{ transform: 'translateZ(10px)' }}>
         {isLoading ? (
           <div className="w-6 h-6 border-2 border-current/50 border-t-secondary rounded-full animate-spin"></div>
         ) : error ? (
-          <p className="text-warning text-sm">{error}</p>
+          <p className="text-accent text-sm">{error}</p>
         ) : (
           children
         )}

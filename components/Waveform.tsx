@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface WaveformProps {
@@ -40,6 +39,8 @@ const Waveform: React.FC<WaveformProps> = ({ isListening, isSpeaking, isReceivin
                 const newPaths = [
                     createElectricPath(50, 100, 15, intensity),
                     createElectricPath(50, 100, 10, intensity / 2),
+                    createElectricPath(50, 100, 20, intensity * 1.2),
+                    createElectricPath(50, 100, 12, intensity / 1.5),
                 ];
                 setElectricPaths(newPaths);
             }, 100);
@@ -50,10 +51,12 @@ const Waveform: React.FC<WaveformProps> = ({ isListening, isSpeaking, isReceivin
     }, [isActive, isSpeaking, isReceivingText]);
 
     const waves = [
-        { color: 'text-pink-400/80', amplitude: 8, frequency: 3, phase: 0, speed: 8 },
-        { color: 'text-cyan-300/80', amplitude: 10, frequency: 2.5, phase: 90, speed: 10 },
-        { color: 'text-white/90', amplitude: 6, frequency: 4, phase: 180, speed: 9 },
-        { color: 'text-purple-400/70', amplitude: 12, frequency: 2, phase: 270, speed: 12 },
+        { color: 'text-secondary/80', amplitude: 8, frequency: 3, phase: 0, speed: 8 },
+        { color: 'text-primary/80', amplitude: 10, frequency: 2.5, phase: 90, speed: 10 },
+        { color: 'text-base-content-dark/90', amplitude: 6, frequency: 4, phase: 180, speed: 9 },
+        { color: 'text-primary/70', amplitude: 12, frequency: 2, phase: 270, speed: 12 },
+        { color: 'text-secondary/60', amplitude: 9, frequency: 3.5, phase: 45, speed: 11 },
+        { color: 'text-primary/50', amplitude: 7, frequency: 2.2, phase: 220, speed: 13 },
     ];
     
     return (
@@ -104,10 +107,10 @@ const Waveform: React.FC<WaveformProps> = ({ isListening, isSpeaking, isReceivin
                              key={i}
                              d={path}
                              fill="none"
-                             stroke="cyan"
-                             strokeWidth={i === 0 ? "0.5" : "0.25"}
+                             stroke="currentColor"
+                             strokeWidth={i % 2 === 0 ? "0.5" : "0.25"}
                              strokeLinecap="round"
-                             className="opacity-80"
+                             className="opacity-80 text-primary"
                            />
                         ))}
                      </g>

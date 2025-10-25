@@ -163,3 +163,17 @@ export interface AlexandriaPhoto {
     description: string;
     url: string;
 }
+
+export interface EmergencyContact {
+  service: string;
+  number: string;
+  icon: 'police' | 'ambulance' | 'fire';
+}
+
+export interface DirectoryContact {
+  name: string;
+  department: string;
+  phone: string;
+  address?: string;
+  email?: string;
+}

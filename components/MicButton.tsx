@@ -12,8 +12,8 @@ const MicIcon: React.FC<{className?: string}> = ({className}) => (
         <svg width="0" height="0" className="absolute">
             <defs>
                 <linearGradient id="mic-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#67E8F9" />
-                    <stop offset="100%" stopColor="#A855F7" />
+                    <stop offset="0%" stopColor="#00A8E8" />
+                    <stop offset="100%" stopColor="#FF6B6B" />
                 </linearGradient>
             </defs>
         </svg>
@@ -27,8 +27,8 @@ const MicIcon: React.FC<{className?: string}> = ({className}) => (
 
 const MicButton: React.FC<MicButtonProps> = ({ isConnecting, isConnected, isListening, onClick }) => {
     const glowClass = isConnected 
-      ? 'shadow-[0_0_25px_5px_rgba(103,232,249,0.5),_0_0_10px_0px_rgba(168,85,247,0.5)]'
-      : 'shadow-[0_0_25px_5px_rgba(168,85,247,0.4)]';
+      ? 'shadow-[0_0_25px_5px_rgba(0,168,232,0.5),_0_0_10px_0px_rgba(255,107,107,0.5)]'
+      : 'shadow-[0_0_25px_5px_rgba(255,107,107,0.4)]';
 
     return (
         <button

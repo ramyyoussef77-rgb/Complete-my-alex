@@ -8,7 +8,8 @@ import Header from './Header';
 import { useApp } from '../hooks/useApp';
 import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import { SkeletonImageCard } from './SkeletonLoader';
-import { decode } from '../services/audioUtils';
+// FIX: Imported custom `decodeAudioData` function to correctly process raw PCM audio.
+import { decode, decodeAudioData } from '../services/audioUtils';
 
 interface HistoryPageProps {
   openNav: () => void;
@@ -74,14 +75,15 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ openNav }) => {
         contents: [{ parts: [{ text: textToSpeak }] }],
         config: {
           responseModalities: [Modality.AUDIO],
-          speechConfig: { speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } } },
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
         },
       });
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (!base64Audio) throw new Error("No audio data returned");
 
       const audioData = decode(base64Audio);
-      const decodedData = await audioContext.decodeAudioData(audioData.buffer);
+      // FIX: Used custom `decodeAudioData` for raw PCM data as per API guidelines.
+      const decodedData = await decodeAudioData(audioData, audioContext, 24000, 1);
       audioCache.current.set(place.name, decodedData);
       playAudioBuffer(decodedData);
     } catch (e) {
@@ -117,8 +119,21 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ openNav }) => {
     try {
       if (!process.env.API_KEY) throw new Error("API key is not configured.");
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = `List 12 significant historical places in Alexandria, Egypt. Respond ONLY with valid JSON array of objects. Each must have "name", "description", "era"(one of "Ptolemaic", "Roman", "Ottoman", "Modern"), "ancientImageUrl", "modernImagePrompt", "narrative"(~50 words, first-person), and "coordinates"({"lat": number, "lng": number}).`;
-      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { tools: [{ googleSearch: {} }] } });
+      const prompt = `
+        For 12 significant historical places in Alexandria, Egypt, follow these steps for each place:
+        1. Use your search tools to find the following factual information:
+           - The common name of the place ('name').
+           - A brief historical description ('description').
+           - The historical era it belongs to (must be one of "Ptolemaic", "Roman", "Ottoman", or "Modern") ('era').
+           - A URL to a historical image or depiction ('ancientImageUrl').
+           - Its approximate GPS coordinates ('coordinates').
+        2. Based on the information found, perform these creative tasks:
+           - Write a short, immersive, first-person narrative (~50 words) about being there in its era ('narrative').
+           - Create a descriptive prompt for an image generation model to create a modern, artistic photo of the location ('modernImagePrompt').
+        3. Format the final output for all 12 places as a single, valid JSON array of objects. Each object must contain all the keys: "name", "description", "era", "ancientImageUrl", "modernImagePrompt", "narrative", and "coordinates" (format: {"lat": number, "lng": number}).
+        Your final response MUST BE ONLY the JSON array, with no other text or markdown.
+      `;
+      const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { tools: [{ googleSearch: {} }, { googleMaps: {} }] } });
       const sanitizedText = response.text.trim().replace(/^```json\s*|```$/g, '');
       const placesData = JSON.parse(sanitizedText);
       if (!Array.isArray(placesData)) throw new Error("Invalid data format");
@@ -152,10 +167,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ openNav }) => {
   return (
     <>
       <NarrativeModal place={selectedPlace} onClose={() => setSelectedPlace(null)} />
-      <div className="relative flex-1 w-full bg-parchment text-base-content dark:text-base-content-dark p-4 pt-20 flex flex-col overflow-hidden">
+      <div className="relative flex-1 w-full bg-base-100 dark:bg-base-dark-100 text-base-content dark:text-base-content-dark p-4 pt-20 flex flex-col">
         <Header openNav={openNav} />
         
-        <div className="sticky top-0 z-20 bg-parchment/80 dark:bg-base-dark-100/80 backdrop-blur-sm -mx-4 px-4 py-2 mb-4">
+        <div className="sticky top-0 z-20 bg-base-100/80 dark:bg-base-dark-100/80 backdrop-blur-sm -mx-4 px-4 py-2 mb-4">
           <div className="flex space-x-2 overflow-x-auto pb-2">
             {ERAS.map(era => (
               <button key={era} onClick={() => setActiveEra(era)} className={`px-3 py-1 text-sm rounded-full font-semibold transition-colors flex-shrink-0 ${activeEra === era ? 'bg-secondary text-base-dark-100' : 'bg-base-200 dark:bg-base-dark-200'}`}>
@@ -165,10 +180,10 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ openNav }) => {
           </div>
         </div>
         
-        <main className="flex-1 overflow-y-auto z-10" style={{ perspective: '1000px' }}>
+        <main className="flex-1 z-10" style={{ perspective: '1000px' }}>
           {(isLoading || isTranslating) ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => <SkeletonImageCard key={i} className="h-80" />)}
+              {[...Array(6)].map((_, i) => <SkeletonImageCard key={i} className="aspect-[3/4]" />)}
             </div>
           ) : error ? (
             <div className="flex justify-center items-center h-full"><p className="text-center text-accent">{error}</p></div>

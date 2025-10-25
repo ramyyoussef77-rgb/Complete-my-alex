@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { MarketplaceItem } from '../types';
 import MarketplaceCard from './MarketplaceCard';
@@ -247,7 +246,7 @@ const MarketplacePage: React.FC<{ openNav: () => void }> = ({ openNav }) => {
               {isLoading ? <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">{[...Array(10)].map((_, i) => <SkeletonImageCard key={i} />)}</div>
                : error ? <p className="text-center text-accent">{error}</p>
                : filteredAndSortedItems.length === 0 ? <p className="text-center">{t.no_listings_found}</p>
-               : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+               : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" style={{ perspective: '1000px' }}>
                   {filteredAndSortedItems.map((item, index) => <div ref={items.length === index + 1 ? lastItemElementRef : null} key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${(index % ITEMS_PER_PAGE) * 50}ms` }}><MarketplaceCard item={item} onSelect={() => setSelectedItem(item)} /></div>)}
                 </div>}
               {isFetchingMore && <div className="text-center py-4">{t.loading_more}</div>}
@@ -257,8 +256,8 @@ const MarketplacePage: React.FC<{ openNav: () => void }> = ({ openNav }) => {
 
           {(mode === 'sell' || mode === 'myListings') && (
             mode === 'myListings' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {myItems.map((item, i) => <div key={item.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}><MarketplaceCard item={item} onSelect={() => setSelectedItem(item)} onEdit={() => handleEdit(item)} onDelete={() => handleDelete(item.id)} isOwner={true} /></div>)}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" style={{ perspective: '1000px' }}>
+                {myItems.map((i, index) => <div key={i.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}><MarketplaceCard item={i} onSelect={() => setSelectedItem(i)} onEdit={() => handleEdit(i)} onDelete={() => handleDelete(i.id)} isOwner={true} /></div>)}
                 {myItems.length === 0 && <p className="col-span-full text-center">{t.no_listings_found}</p>}
               </div>
             ) : (
@@ -284,7 +283,7 @@ const MarketplacePage: React.FC<{ openNav: () => void }> = ({ openNav }) => {
                     <input type="tel" value={formState.phone} onChange={e => setFormState(s=>({...s, phone: e.target.value}))} placeholder={t.phone_number} className="w-full px-3 py-2 border-transparent rounded-md bg-base-dark-100" />
                     {formError && <p className="text-accent text-sm text-center">{formError}</p>}
                     <button type="submit" disabled={isSubmitting} className="w-full bg-secondary text-base-dark-100 font-bold py-3 rounded-md disabled:opacity-50 flex justify-center items-center">
-                        {isSubmitting ? <div className="w-6 h-6 border-2 border-current/50 border-t-white rounded-full animate-spin"></div> : (itemToEdit ? 'Update Item' : t.post_item)}
+                        {isSubmitting ? <div className="w-6 h-6 border-2 border-current/50 border-t-base-content-dark rounded-full animate-spin"></div> : (itemToEdit ? 'Update Item' : t.post_item)}
                     </button>
                 </form>
              </div>
