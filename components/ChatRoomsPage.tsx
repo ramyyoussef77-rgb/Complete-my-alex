@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { ChatMessage } from '../types';
 import { useApp } from '../hooks/useApp';
 import { useTranslations } from '../hooks/useTranslations';
 import { ALEXANDRIA_NEIGHBORHOODS } from '../i18n';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { getChatMessages, addChatMessage, updateChatMessage, uploadImage } from '../services/firebaseService';
 import { useNotifications } from '../hooks/useNotifications';
 import RoomSelectionModal from './RoomSelectionModal';

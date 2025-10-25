@@ -246,6 +246,31 @@
       .cloud-drift { animation: cloud-drift-anim 5s infinite ease-in-out; }
       @keyframes rain-drop-anim { 0% { transform: translateY(-3px); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
       .rain-drop { animation: rain-drop-anim 1.5s infinite linear; }
+
+      /* --- Traffic Chart Animations --- */
+      @keyframes traffic-flow-light {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: -20; }
+      }
+      @keyframes traffic-flow-moderate {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: -10; }
+      }
+      @keyframes traffic-flow-heavy {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: -5; }
+      }
+      @keyframes traffic-pulse-glow {
+          0% { filter: drop-shadow(0 0 1px rgba(229, 57, 53, 0.6)); }
+          50% { filter: drop-shadow(0 0 4px rgba(229, 57, 53, 1)); }
+          100% { filter: drop-shadow(0 0 1px rgba(229, 57, 53, 0.6)); }
+      }
+
+      /* --- Lighthouse Glow Animation --- */
+      @keyframes lighthouse-body-glow {
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(244, 244, 244, 0.4)); }
+          50% { filter: drop-shadow(0 0 8px rgba(244, 244, 244, 0.8)); }
+      }
     </style>
   </head>
   <body>

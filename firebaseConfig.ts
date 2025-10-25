@@ -1,3 +1,4 @@
+
 // This is a placeholder for your Firebase configuration.
 // Go to your Firebase project console, navigate to Project Settings,
 // and under the "General" tab, find your web app's config object.

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { WeatherData, TrafficData, NewsData } from '../types';
@@ -5,7 +6,8 @@ import InfoCard from './InfoCard';
 import { useApp } from '../hooks/useApp';
 import { useTranslations } from '../hooks/useTranslations';
 import { Page } from '../App';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import DailyBriefingCard from './DailyBriefingCard';
 import ProTipCard from './ProTipCard';

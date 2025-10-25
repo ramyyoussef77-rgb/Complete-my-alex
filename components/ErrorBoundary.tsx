@@ -1,6 +1,7 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
 
-interface Props {
+import React, { ErrorInfo, ReactNode } from 'react';
+
+interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
@@ -8,9 +9,13 @@ interface State {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<Props, State> {
-  // FIX: Initialize state as a class property. This is a common pattern for React class components and resolves issues with 'this.state' and 'this.props' not being recognized.
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, State> {
   public state: State = { hasError: false };
+
+  // FIX: Removed redundant constructor. The `props` are correctly managed by `React.Component` base class without an explicit constructor if only `super(props)` is called.
+  // constructor(props: ErrorBoundaryProps) {
+  //   super(props);
+  // }
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
@@ -23,6 +28,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
+    const { children } = this.props; 
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
@@ -41,7 +47,7 @@ class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }
 

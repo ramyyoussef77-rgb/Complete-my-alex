@@ -1,7 +1,10 @@
+
+
 import React, { useState } from 'react';
 import { useApp } from '../hooks/useApp';
 import { useTranslations } from '../hooks/useTranslations';
 import { GoogleGenAI, Modality } from '@google/genai';
+import LighthouseIconAnimated from './LighthouseIconAnimated'; // Import the new component
 
 const GoogleIcon = () => <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.618-3.319-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.022 44 30.022 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>;
 const FacebookIcon = () => <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.128 22 16.991 22 12z"></path></svg>;
@@ -28,35 +31,9 @@ async function generateImage(prompt: string): Promise<string | null> {
   }
 }
 
-const LighthouseLoginIcon: React.FC = () => (
-    <div className="w-48 h-48 group tilt-card mb-8" style={{ perspective: '500px' }}>
-        <svg viewBox="0 0 64 64" className="w-full h-full animate-float">
-          <defs>
-            <linearGradient id="fab-grad-icon-login" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#F8F8F8" />
-                <stop offset="100%" stopColor="#E0E0E0" />
-            </linearGradient>
-          </defs>
-          {/* Back Layer */}
-          <g style={{ transform: 'translateZ(-2px)' }} opacity="0.6">
-            <path fill="#252A4A" d="M22 24 L20 62 L44 62 L42 24 Z" />
-          </g>
-          {/* Main Structure */}
-          <g style={{ transform: 'translateZ(0px)' }}>
-            <path fill="url(#fab-grad-icon-login)" d="M24 24 L22 62 L42 62 L40 24 Z" />
-            <path fill="url(#fab-grad-icon-login)" d="M20 20 H 44 L 42 24 H 22 Z" />
-            <path fill="#1B1F3B" d="M28 2 H 36 L 40 20 H 24 Z" />
-            <rect x="26" y="4" width="12" height="14" fill="url(#fab-grad-icon-login)" opacity="0.8"/>
-          </g>
-          {/* Light Beam */}
-          <g style={{ transform: 'translateZ(2px)', transformOrigin: '32px 2px' }} className="group-hover:[animation:sweep-light_3s_ease-in-out_infinite]">
-            <path fill="currentColor" className="text-accent" d="M32 2 L 28 8 H 36 Z" />
-          </g>
-        </svg>
-    </div>
-);
-
-const LoginPage: React.FC = () => {
+// The component `LoginPage` is intentionally defined as a plain functional component
+// without `React.FC` to ensure it does not implicitly require a `children` prop.
+const LoginPage = () => {
   const { login } = useApp();
   const t = useTranslations();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -92,7 +69,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-primary to-base-dark-100 text-base-content-dark">
-      <LighthouseLoginIcon />
+      <LighthouseIconAnimated className="w-48 h-48 mb-8" isAnimatedLightSweep={true} isFloating={false} /> {/* Using the new component */}
       <div className="text-center">
         <h1 className="text-display tracking-wider text-white">{t.home_title_en}</h1>
         <h2 className="text-h1 font-light text-secondary">{t.home_title_ar}</h2>

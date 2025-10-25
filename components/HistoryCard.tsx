@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { HistoricalPlace } from '../types';
 import { useTranslations } from '../hooks/useTranslations';

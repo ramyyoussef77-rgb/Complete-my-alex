@@ -5,6 +5,7 @@ import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import { useTranslations } from '../hooks/useTranslations';
 
 const PHOTOS_CACHE_KEY = 'alexPhotosCache';
+const FALLBACK_IMAGE_URL = 'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=NoImage'; // Generic placeholder image
 
 interface AlexandriaInPhotosCardProps {
     shouldFetch: boolean;
@@ -46,8 +47,15 @@ const AlexandriaInPhotosCard: React.FC<AlexandriaInPhotosCardProps> = ({ shouldF
             const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { tools: [{ googleSearch: {} }] } });
             const sanitizedText = response.text.trim().replace(/^```json\s*|```$/g, '');
             const data = JSON.parse(sanitizedText);
-            setPhotos(data);
-            localStorage.setItem(PHOTOS_CACHE_KEY, JSON.stringify({ date: today, data }));
+            
+            // Ensure imageUrl is valid or provide fallback
+            const processedData: AlexandriaPhoto[] = data.map((photo: AlexandriaPhoto) => ({
+                ...photo,
+                imageUrl: photo.imageUrl && photo.imageUrl.startsWith('http') ? photo.imageUrl : FALLBACK_IMAGE_URL,
+            }));
+            
+            setPhotos(processedData);
+            localStorage.setItem(PHOTOS_CACHE_KEY, JSON.stringify({ date: today, data: processedData }));
         } catch (e) {
             console.error("Failed to fetch photos:", e);
             setError("Couldn't load photos.");
@@ -77,7 +85,7 @@ const AlexandriaInPhotosCard: React.FC<AlexandriaInPhotosCardProps> = ({ shouldF
                 <div className="flex-1 flex justify-center items-center">
                     <p className="text-warning text-xs">{error}</p>
                 </div>
-            ) : (
+            ) : (translatedData && translatedData.length > 0) ? (
                 <div className="flex-1 grid grid-cols-3 gap-2">
                     {translatedData?.map((photo, index) => (
                         <a href={photo.url} key={index} target="_blank" rel="noopener noreferrer" className="block relative rounded-lg overflow-hidden group">
@@ -86,6 +94,10 @@ const AlexandriaInPhotosCard: React.FC<AlexandriaInPhotosCardProps> = ({ shouldF
                             <p className="absolute bottom-1 left-1.5 text-white text-caption leading-tight font-medium drop-shadow-sm">{photo.description}</p>
                         </a>
                     ))}
+                </div>
+            ) : (
+                <div className="flex-1 flex justify-center items-center">
+                    <p className="text-base-content-dark/70 text-sm">{t.no_photos_found_today}</p>
                 </div>
             )}
         </div>

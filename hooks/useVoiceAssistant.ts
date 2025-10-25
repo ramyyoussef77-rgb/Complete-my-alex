@@ -1,5 +1,4 @@
 
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, ConnectRequest, Type, FunctionDeclaration } from "@google/genai";
 import { ConversationTurn, User, Language } from '../types';
@@ -7,6 +6,12 @@ import { encode, decode, decodeAudioData } from '../services/audioUtils';
 import { saveConversationHistory } from '../services/firebaseService';
 import { Page } from '../App';
 import { useTranslations } from './useTranslations';
+
+// FIX: Removed the declare global block for aistudio.
+// The prompt states "Assume this variable is pre-configured, valid, and accessible".
+// This implies window.aistudio is already declared elsewhere, and redeclaring it
+// here causes "Subsequent property declarations must have the same type" errors.
+
 
 export const useVoiceAssistant = (
     user: User | null,
@@ -21,6 +26,7 @@ export const useVoiceAssistant = (
     const [conversation, setConversation] = useState<ConversationTurn[]>([]);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isReceivingText, setIsReceivingText] = useState(false);
+    const [hasApiKey, setHasApiKey] = useState(true); // Assume API key is present initially
     const t = useTranslations();
 
     const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
@@ -48,6 +54,24 @@ export const useVoiceAssistant = (
     useEffect(() => {
         connectionStateRef.current = { isConnecting, isConnected };
     }, [isConnecting, isConnected]);
+
+    const promptApiKeySelection = useCallback(async () => {
+        // Assume window.aistudio exists and is correctly configured
+        // FIX: Add type assertion to window.aistudio to ensure TypeScript recognizes its properties
+        if ((window as any).aistudio && typeof (window as any).aistudio.openSelectKey === 'function') {
+            await (window as any).aistudio.openSelectKey();
+            // Optimistically set hasApiKey to true after prompting,
+            // hoping the user selects a valid key.
+            // A short delay helps mitigate race conditions where process.env.API_KEY
+            // might not be updated instantly after openSelectKey returns.
+            await new Promise(resolve => setTimeout(resolve, 500)); 
+            setHasApiKey(true);
+        } else {
+            console.error("window.aistudio.openSelectKey is not available.");
+            setConversation(prev => [...prev.map(t => ({...t, isPartial: false})), { type: 'system', text: "API key selection mechanism not found." }]);
+            setHasApiKey(false); // Stay false if mechanism isn't there.
+        }
+    }, []);
 
     const stopSession = useCallback(async (isExit = false) => {
         if (!connectionStateRef.current.isConnected && !connectionStateRef.current.isConnecting) return;
@@ -96,13 +120,27 @@ export const useVoiceAssistant = (
     const startSession = useCallback(async () => {
         if (connectionStateRef.current.isConnected || connectionStateRef.current.isConnecting || !user) return;
         
+        // --- API Key Pre-check ---
+        if (!process.env.API_KEY) {
+            setHasApiKey(false);
+            setConversation(prev => [...prev.map(turn => ({...turn, isPartial: false})), { type: 'system', text: t.api_key_missing_prompt }]);
+            promptApiKeySelection();
+            return;
+        }
+
+        if (!hasApiKey) { // If hasApiKey was previously set to false due to an error
+            setConversation(prev => [...prev.map(turn => ({...turn, isPartial: false})), { type: 'system', text: t.api_key_reselect_prompt }]);
+            promptApiKeySelection();
+            return;
+        }
+
         setIsConnecting(true);
         if (conversation.length === 0) {
-            setConversation([{ type: 'system', text: 'Connecting...' }]);
+            setConversation([{ type: 'system', text: t.assistant_connecting }]);
         }
         
         try {
-            if (!process.env.API_KEY) throw new Error("API_KEY not found.");
+            // CRITICAL: Initialize GoogleGenAI *here* to ensure it picks up the latest API key.
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -139,7 +177,7 @@ export const useVoiceAssistant = (
                     onopen: () => {
                         setIsConnecting(false);
                         setIsConnected(true);
-                        setConversation(prev => prev.filter(t => t.type !== 'system'));
+                        setConversation(prev => prev.filter(turn => turn.type !== 'system'));
                         
                         // FIX: Changed inputAudioContext to inputAudioContextRef.current to access the correct AudioContext instance.
                         const source = inputAudioContextRef.current!.createMediaStreamSource(mediaStreamRef.current!);
@@ -201,7 +239,12 @@ export const useVoiceAssistant = (
                             setIsReceivingText(true);
                             const text = message.serverContent.outputTranscription.text;
                             currentOutputTranscription.current += text;
-                            newAssistantTurn = { type: 'assistant', text: currentOutputTranscription.current, isPartial: true };
+                            // If this is the first part of the model's speech, add a "thinking" placeholder
+                            if (currentOutputTranscription.current.length === text.length) {
+                                newAssistantTurn = { type: 'assistant', text: text, isPartial: true };
+                            } else {
+                                newAssistantTurn = { type: 'assistant', text: currentOutputTranscription.current, isPartial: true };
+                            }
                         }
                         
                         if (message.serverContent?.inputTranscription) {
@@ -219,18 +262,25 @@ export const useVoiceAssistant = (
                         if (message.toolCall) {
                             for (const fc of message.toolCall.functionCalls) {
                                 let result: any;
-                                let toolMessage = `Consulting ${fc.name}...`;
+                                let toolMessage = `Consulting ${fc.name}...`; // Default generic message
 
                                 if (fc.name === 'getCurrentLocation') {
+                                    toolMessage = t.assistant_consulting_maps; // More specific for location
                                     result = locationRef.current ? JSON.stringify(locationRef.current) : "Location not available.";
                                 } else if (fc.name === 'navigateToPage') {
                                     const page = fc.args.page as Page;
+                                    toolMessage = t.assistant_navigating.replace('{page}', page);
                                     onNavigate(page);
                                     result = `Navigating to ${page}.`;
-                                    toolMessage = t.assistant_navigating.replace('{page}', page);
+                                } else if (fc.name === 'googleSearch') {
+                                    toolMessage = t.assistant_searching_web;
+                                    result = "Searching..."; // Placeholder, actual search happens server-side
+                                } else if (fc.name === 'googleMaps') {
+                                    toolMessage = t.assistant_consulting_maps;
+                                    result = "Consulting maps..."; // Placeholder
                                 }
                                 
-                                setConversation(prev => [...prev.map(t => ({...t, isPartial: false})), { type: 'tool', text: toolMessage }]);
+                                setConversation(prev => [...prev.map(turn => ({...turn, isPartial: false})), { type: 'tool', text: toolMessage }]);
 
                                 sessionPromiseRef.current?.then((session) => {
                                     session.sendToolResponse({
@@ -247,7 +297,7 @@ export const useVoiceAssistant = (
                         if (message.serverContent?.turnComplete) {
                             setIsReceivingText(false);
                             if (currentInputTranscription.current) {
-                                setConversation(prev => prev.map(t => t.type === 'user' && t.isPartial ? { ...t, text: currentInputTranscription.current, isPartial: false } : t));
+                                setConversation(prev => prev.map(turn => turn.type === 'user' && turn.isPartial ? { ...turn, text: currentInputTranscription.current, isPartial: false } : turn));
                             }
                             if (currentOutputTranscription.current) {
                                 newAssistantTurn = { type: 'assistant', text: currentOutputTranscription.current, isPartial: false };
@@ -259,17 +309,26 @@ export const useVoiceAssistant = (
                         if (newAssistantTurn) {
                             setConversation(prev => {
                                 const last = prev[prev.length - 1];
+                                // If the last message was a partial assistant message, update it
                                 if (last?.type === 'assistant' && last.isPartial) {
                                     return [...prev.slice(0, -1), { ...newAssistantTurn! }];
                                 }
-                                return [...prev.map(t => ({ ...t, isPartial: false })), newAssistantTurn!];
+                                // Otherwise, add the new assistant turn (after ensuring previous partials are finalized)
+                                return [...prev.map(turn => ({ ...turn, isPartial: false })), newAssistantTurn!];
                             });
                         }
                     },
                     onerror: (e: ErrorEvent) => {
                         console.error('Session error:', e);
-                        setConversation(prev => [...prev, { type: 'system', text: `Connection error: ${e.message}. Please try again.`}]);
-                        stopSession();
+                        if (e.message.includes("Requested entity was not found.")) {
+                            setHasApiKey(false); // Indicate that the key might be invalid
+                            setConversation(prev => [...prev, { type: 'system', text: t.api_key_invalid_reselect }]);
+                            promptApiKeySelection(); // Prompt user to re-select
+                            stopSession(); // Stop the current problematic session
+                        } else {
+                            setConversation(prev => [...prev, { type: 'system', text: `${t.connection_error}: ${e.message}. ${t.try_again_later}`}]);
+                            stopSession();
+                        }
                     },
                     onclose: () => {
                         console.log('Session closed');
@@ -291,12 +350,18 @@ export const useVoiceAssistant = (
             sessionPromiseRef.current = ai.live.connect(connectRequest);
             await sessionPromiseRef.current;
 
-        } catch (error) {
+        } catch (error: any) { // Catch all errors here
             console.error('Failed to start session:', error);
-            setConversation(prev => [...prev, { type: 'system', text: `Failed to connect. Please check permissions and API key.` }]);
+            if (error.message.includes("API key")) { // A more generic check if the initial check failed or if the key is structurally invalid
+                setHasApiKey(false);
+                setConversation(prev => [...prev, { type: 'system', text: t.api_key_error_generic }]);
+                promptApiKeySelection();
+            } else {
+                setConversation(prev => [...prev, { type: 'system', text: `${t.failed_to_connect_generic}.`}]);
+            }
             setIsConnecting(false);
         }
-    }, [user, voice, stopSession, conversation, onNavigate, t]);
+    }, [user, voice, stopSession, conversation, onNavigate, t, hasApiKey, promptApiKeySelection, location]); // Add hasApiKey and promptApiKeySelection to dependencies
 
     // FIX: Added return statement to export the hook's state and methods.
     return {
@@ -307,6 +372,8 @@ export const useVoiceAssistant = (
         conversation,
         startSession,
         stopSession,
-        sendTextMessage
+        sendTextMessage,
+        hasApiKey,
+        promptApiKeySelection
     };
 };

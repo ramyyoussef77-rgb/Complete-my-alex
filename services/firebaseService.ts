@@ -1,4 +1,5 @@
 
+
 import { User, MarketplaceItem, ChatMessage, ConversationTurn } from '../types';
 
 // This is a mock/simulation of a Firebase service. In a real app,

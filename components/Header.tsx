@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslations } from '../hooks/useTranslations';
 import NotificationBell from './NotificationBell';
@@ -22,7 +23,8 @@ const createRipple = (event: React.MouseEvent<HTMLElement>) => {
     button.appendChild(circle);
 };
 
-const Header: React.FC<HeaderProps> = ({ openNav }) => {
+// FIX: Changed to named export
+export const Header: React.FC<HeaderProps> = ({ openNav }) => {
     const t = useTranslations();
     
     const handleNavClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -44,12 +46,4 @@ const Header: React.FC<HeaderProps> = ({ openNav }) => {
             {/* Right Side */}
             <div className="flex items-center gap-2">
                 <NotificationBell />
-                <button onClick={handleNavClick} className="ripple-container p-2 -mr-2 rounded-full hover:bg-white/10 transition-transform active:scale-95" aria-label={t.openMenu}>
-                    <MenuIcon />
-                </button>
-            </div>
-        </header>
-    );
-};
-
-export default Header;
+                <button onClick

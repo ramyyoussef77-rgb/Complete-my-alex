@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { MarketplaceItem } from '../types';
 import MarketplaceCard from './MarketplaceCard';
@@ -6,7 +7,8 @@ import FindSimilarModal from './FindSimilarModal';
 import { useTranslations } from '../hooks/useTranslations';
 import { useApp } from '../hooks/useApp';
 import { getMarketplaceItems, addMarketplaceItem, uploadImage, deleteMarketplaceItem, updateMarketplaceItem } from '../services/firebaseService';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { SkeletonImageCard } from './SkeletonLoader';
 

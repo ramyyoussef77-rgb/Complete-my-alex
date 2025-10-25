@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { HistoricalPlace } from '../types';
 import HistoryCard from './HistoryCard';
 import NarrativeModal from './NarrativeModal';
 import { useTranslations } from '../hooks/useTranslations';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { useApp } from '../hooks/useApp';
 import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import { SkeletonImageCard } from './SkeletonLoader';
@@ -25,11 +27,13 @@ async function generateImage(prompt: string): Promise<string | null> {
   try {
     if (!process.env.API_KEY) return null;
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: { parts: [{ text: prompt }] },
       config: { responseModalities: [Modality.IMAGE] },
     });
+
     const part = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
     return part?.inlineData ? `data:image/png;base64,${part.inlineData.data}` : null;
   } catch (e) {
@@ -180,7 +184,7 @@ const HistoryPage: React.FC<HistoryPageProps> = ({ openNav }) => {
           </div>
         </div>
         
-        <main className="flex-1 z-10" style={{ perspective: '1000px' }}>
+        <main className="flex-1 z-10 overflow-y-auto" style={{ perspective: '1000px' }}> {/* ADDED: overflow-y-auto */}
           {(isLoading || isTranslating) ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => <SkeletonImageCard key={i} className="aspect-[3/4]" />)}

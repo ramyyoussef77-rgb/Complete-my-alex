@@ -187,6 +187,21 @@ export const translations = {
     fire_department: 'Fire Department',
     search_directory_placeholder: 'Search for a department or contact...',
     no_contacts_found: 'No contacts found matching your search.',
+    // API Key Related
+    api_key_missing_prompt: "An API key is required to start the assistant. Please select one.",
+    api_key_reselect_prompt: "Please re-select your API key to continue.",
+    api_key_invalid_reselect: "Your API key seems invalid. Please re-select it.",
+    api_key_error_generic: "There was an issue with the API key. Please select it again.",
+    failed_to_connect_generic: "Failed to connect to the assistant",
+    connection_error: "Connection error",
+    try_again_later: "Please try again later.",
+    assistant_connecting: "Connecting...",
+    select_api_key: "Select API Key",
+    api_key_required_title: "API Key Required",
+    api_key_required_description: "To use the AI assistant, you need to select a Google Gemini API key. This helps us personalize your experience and power advanced features. Your key will be securely managed by the system.",
+    read_billing_docs: "Read about billing here.",
+    api_key_selection_button: "Select API Key",
+    no_photos_found_today: "No photos found for today.", // NEW
   },
   ar: {
     header_title: 'مساعد Gemini الصوتي',
@@ -375,6 +390,21 @@ export const translations = {
     fire_department: 'المطافئ',
     search_directory_placeholder: 'ابحث عن إدارة أو جهة اتصال...',
     no_contacts_found: 'لم يتم العثور على جهات اتصال تطابق بحثك.',
+    // API Key Related
+    api_key_missing_prompt: "مطلوب مفتاح API لتشغيل المساعد. يرجى اختياره.",
+    api_key_reselect_prompt: "يرجى إعادة تحديد مفتاح API الخاص بك للمتابعة.",
+    api_key_invalid_reselect: "يبدو أن مفتاح API الخاص بك غير صالح. يرجى إعادة تحديده.",
+    api_key_error_generic: "حدثت مشكلة في مفتاح API. يرجى تحديده مرة أخرى.",
+    failed_to_connect_generic: "فشل الاتصال بالمساعد",
+    connection_error: "خطأ في الاتصال",
+    try_again_later: "الرجاء المحاولة مرة أخرى لاحقًا.",
+    assistant_connecting: "جارٍ الاتصال...",
+    select_api_key: "حدد مفتاح API",
+    api_key_required_title: "مفتاح API مطلوب",
+    api_key_required_description: "لاستخدام المساعد الذكي، تحتاج إلى تحديد مفتاح API الخاص بـ Google Gemini. يساعدنا هذا في تخصيص تجربتك وتشغيل الميزات المتقدمة. ستتم إدارة مفتاحك بأمان بواسطة النظام.",
+    read_billing_docs: "اقرأ عن الفوترة هنا.",
+    api_key_selection_button: "حدد مفتاح API",
+    no_photos_found_today: "لم يتم العثور على صور لهذا اليوم.", // NEW
   }
 };
 

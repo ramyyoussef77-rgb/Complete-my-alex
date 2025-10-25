@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../hooks/useApp';
 import { useTranslations, VOICES } from '../hooks/useTranslations';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 
 interface SettingsPageProps {
   openNav: () => void;

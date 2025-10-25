@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { LocalService } from '../types';
 import { useTranslations } from '../hooks/useTranslations';
@@ -11,12 +12,13 @@ interface ServiceCardProps {
 
 const createRipple = (event: React.MouseEvent<HTMLElement>) => {
     const button = event.currentTarget;
+    const { clientX, clientY } = event; // FIX: Explicitly destructure clientX, clientY from event
     const circle = document.createElement("span");
     const diameter = Math.max(button.clientWidth, button.clientHeight);
     const radius = diameter / 2;
     circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
-    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.style.left = `${clientX - button.getBoundingClientRect().left - radius}px`; // FIX: Use destructured clientX
+    circle.style.top = `${clientY - button.getBoundingClientRect().top - radius}px`;   // FIX: Use destructured clientY
     circle.classList.add("ripple");
     const ripple = button.getElementsByClassName("ripple")[0];
     if (ripple) ripple.remove();

@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { SocialPost } from '../types';
 import SocialBuzzCard from './SocialBuzzCard';
 import { useTranslations } from '../hooks/useTranslations';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { useApp } from '../hooks/useApp';
 import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import { SkeletonCard } from './SkeletonLoader';

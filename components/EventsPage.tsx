@@ -1,15 +1,19 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { LocalEvent } from '../types';
 import EventCard from './EventCard';
 import { useTranslations } from '../hooks/useTranslations';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { useApp } from '../hooks/useApp';
 import { useAutoTranslator } from '../hooks/useAutoTranslator';
 import { SkeletonImageCard } from './SkeletonLoader';
 import CalendarView from './CalendarView';
 import InteractiveMapView from './InteractiveMapView';
 import EventAnalysisModal from './EventAnalysisModal';
+// FIX: Added import for ServiceCard, as its content was mistakenly in this file.
+import ServiceCard from './ServiceCard';
 
 interface EventsPageProps {
   openNav: () => void;
@@ -165,4 +169,4 @@ const EventsPage: React.FC<EventsPageProps> = ({ openNav }) => {
   return (
     <>
       <EventAnalysisModal event={eventToAnalyze} onClose={() => setEventToAnalyze(null)} />
-      <div className="relative flex-1 w-full bg-base-
+      <div className="relative flex-1 w-full bg-base

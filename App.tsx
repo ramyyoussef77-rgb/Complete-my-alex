@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useApp } from './hooks/useApp';
 import { useVoiceAssistant } from './hooks/useVoiceAssistant';
@@ -10,7 +9,8 @@ import SideNav from './components/SideNav';
 import FloatingActionButton from './components/FloatingActionButton';
 import LocationPermissionBanner from './components/LocationPermissionBanner';
 import ErrorBoundary from './components/ErrorBoundary';
-import StatusBar from './components/StatusBar';
+// REMOVED: StatusBar from global App rendering
+import IntroScreen from './components/IntroScreen'; // Import the new IntroScreen
 
 const HomePage = lazy(() => import('./components/HomePage'));
 const SocialBuzzPage = lazy(() => import('./components/SocialBuzzPage'));
@@ -34,6 +34,7 @@ const App: React.FC = () => {
     const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
     const [geolocationError, setGeolocationError] = useState<GeolocationPositionError | null>(null);
     const [isLocationBannerDismissed, setIsLocationBannerDismissed] = useState(false);
+    const [showIntroScreen, setShowIntroScreen] = useState(true); // New state for intro screen
 
     const [conversationHistory, setConversationHistory] = useState<ConversationTurn[] | null>(null);
     const [isHistoryLoading, setIsHistoryLoading] = useState(true);
@@ -61,7 +62,9 @@ const App: React.FC = () => {
         conversation, 
         startSession, 
         stopSession,
-        sendTextMessage
+        sendTextMessage,
+        hasApiKey, // NEW
+        promptApiKeySelection // NEW
     } = useVoiceAssistant(user, voice, language, currentLocation, conversationHistory, navigateTo);
 
     useEffect(() => {
@@ -84,20 +87,16 @@ const App: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (currentPage === 'assistant' && !isConnected && !isConnecting && !isHistoryLoading) {
+        if (currentPage === 'assistant' && !isConnected && !isConnecting && !isHistoryLoading && !showIntroScreen && hasApiKey) { // Add hasApiKey to condition
             startSession();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, isConnected, isConnecting, isHistoryLoading]);
+    }, [currentPage, isConnected, isConnecting, isHistoryLoading, showIntroScreen, hasApiKey]); // Add hasApiKey to dependencies
 
     const handleExitAssistant = () => {
         stopSession(true); // true to save history on exit
         navigateTo('home');
     };
-    
-    if (!user) {
-        return <Suspense fallback={<div></div>}><LoginPage /></Suspense>;
-    }
     
     const pages = {
         'home': <HomePage onNavigate={navigateTo} openNav={() => setIsNavOpen(true)} />,
@@ -115,37 +114,45 @@ const App: React.FC = () => {
     return (
         <div className={`h-screen w-screen flex flex-col font-sans ${theme}`}>
             <ErrorBoundary>
-                <div className="relative h-full w-full flex flex-col bg-base-100 dark:bg-base-dark-100 overflow-hidden">
-                    {currentPage === 'assistant' ? (
-                        <Suspense fallback={<div className="flex-1"></div>}>
-                            <AssistantPage
-                                conversation={conversation}
-                                isConnecting={isConnecting}
-                                isConnected={isConnected}
-                                isSpeaking={isSpeaking}
-                                isReceivingText={isReceivingText}
-                                onExit={handleExitAssistant}
-                                sendTextMessage={sendTextMessage}
-                                startSession={startSession}
-                            />
-                        </Suspense>
-                    ) : (
-                        <>
-                           <StatusBar />
-                           <SideNav 
-                              isOpen={isNavOpen} 
-                              onClose={() => setIsNavOpen(false)} 
-                              onNavigate={navigateTo}
-                              currentPage={currentPage}
-                           />
-                           {geolocationError?.code === 1 && !isLocationBannerDismissed && <LocationPermissionBanner onDismiss={() => setIsLocationBannerDismissed(true)} />}
-                           <Suspense fallback={<div className="flex-1 pt-16 p-4">Loading...</div>}>
-                               {pages[currentPage]}
-                           </Suspense>
-                           <FloatingActionButton onClick={() => navigateTo('assistant')} />
-                        </>
-                    )}
-                </div>
+                {showIntroScreen ? (
+                    <IntroScreen onAnimationComplete={() => setShowIntroScreen(false)} />
+                ) : !user ? (
+                    <Suspense fallback={<div></div>}><LoginPage /></Suspense>
+                ) : (
+                    <div className="relative h-full w-full flex flex-col bg-base-100 dark:bg-base-dark-100"> {/* Removed overflow-hidden */}
+                        {currentPage === 'assistant' ? (
+                            <Suspense fallback={<div className="flex-1"></div>}>
+                                <AssistantPage
+                                    conversation={conversation}
+                                    isConnecting={isConnecting}
+                                    isConnected={isConnected}
+                                    isSpeaking={isSpeaking}
+                                    isReceivingText={isReceivingText}
+                                    onExit={handleExitAssistant}
+                                    sendTextMessage={sendTextMessage}
+                                    startSession={startSession}
+                                    hasApiKey={hasApiKey} // NEW
+                                    promptApiKeySelection={promptApiKeySelection} // NEW
+                                />
+                            </Suspense>
+                        ) : (
+                            <>
+                               {/* REMOVED: StatusBar from here to avoid overlap with page Headers */}
+                               <SideNav 
+                                  isOpen={isNavOpen} 
+                                  onClose={() => setIsNavOpen(false)} 
+                                  onNavigate={navigateTo}
+                                  currentPage={currentPage}
+                               />
+                               {geolocationError?.code === 1 && !isLocationBannerDismissed && <LocationPermissionBanner onDismiss={() => setIsLocationBannerDismissed(true)} />}
+                               <Suspense fallback={<div className="flex-1 pt-16 p-4">Loading...</div>}>
+                                   {pages[currentPage]}
+                               </Suspense>
+                               <FloatingActionButton onClick={() => navigateTo('assistant')} />
+                            </>
+                        )}
+                    </div>
+                )}
             </ErrorBoundary>
         </div>
     );

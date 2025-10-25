@@ -1,9 +1,11 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { LocalService } from '../types';
 import ServiceCard from './ServiceCard';
 import { useTranslations } from '../hooks/useTranslations';
-import Header from './Header';
+// FIX: Changed import to named import as Header is now a named export
+import { Header } from './Header';
 import { SkeletonCard } from './SkeletonLoader';
 import InteractiveMapView from './InteractiveMapView';
 import ServiceDetailModal from './ServiceDetailModal';
